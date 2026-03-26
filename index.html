@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>✨ 小嘟的電子衣櫃</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<!-- SheetJS for Excel import -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --p1:#f9c4d2;--p2:#f4849c;--p3:#e8527a;
+  --m1:#b8ead8;--m2:#7ecfae;
+  --cr:#fef6e8;--bg:#fff8f4;
+  --tx:#3a2030;--sub:#9a607a;--bd:#f4d8e4;
+  --sp:rgba(244,132,156,.13);--sp2:rgba(244,132,156,.28);
+  --sd:rgba(58,32,48,.07);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);display:flex;flex-direction:column;}
+
+/* ── VIEWS ── */
+.view{display:none;flex-direction:column;height:100%;overflow:hidden;}
+.view.active{display:flex;}
+
+/* ════ WELCOME ════ */
+#view-welcome{background:linear-gradient(155deg,#fce4ec,#fff8f0 48%,#eaf8f2);
+  align-items:center;justify-content:center;text-align:center;padding:32px 28px;}
+.wcat{font-size:5rem;line-height:1;display:block;margin-bottom:4px;}
+.bubble{position:relative;background:#fff;border:2.5px solid var(--p1);border-radius:22px;
+  padding:15px 20px;max-width:290px;margin:0 auto 12px;
+  box-shadow:0 6px 24px var(--sp),0 2px 8px var(--sd);}
+.bubble::before{content:'';position:absolute;top:-18px;left:50%;transform:translateX(-50%);
+  border:9px solid transparent;border-bottom-color:var(--p1);}
+.bubble::after{content:'';position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+  border:8px solid transparent;border-bottom-color:#fff;}
+.bubble p{font-size:.8rem;font-weight:700;color:var(--sub);line-height:1.85;}
+.bubble strong{color:var(--p3);font-weight:900;}
+.wtitle{font-size:1.18rem;font-weight:900;color:#7a2048;margin:12px 0 22px;letter-spacing:.3px;}
+@keyframes glowBounce{
+  0%,100%{transform:translateY(0);box-shadow:0 6px 22px var(--sp2),0 0 0 0 rgba(244,132,156,.3);}
+  40%{transform:translateY(-8px);box-shadow:0 16px 34px var(--sp2),0 0 20px 6px rgba(244,132,156,.18);}
+  70%{transform:translateY(-3px);}
+}
+.wbtn{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;border:none;
+  border-radius:32px;padding:14px 40px;font-family:'Nunito',sans-serif;
+  font-size:.98rem;font-weight:900;cursor:pointer;animation:glowBounce 1.9s ease-in-out infinite;}
+.wbtn:active{transform:scale(.95)!important;}
+
+/* ════ HEADER ════ */
+.app-header{background:linear-gradient(120deg,#fce4ec,#ffecd8 60%,#e8f8f2);
+  padding:10px 14px 8px;flex-shrink:0;box-shadow:0 3px 18px var(--sp);z-index:20;}
+.hrow{display:flex;align-items:center;gap:8px;}
+.hcat{font-size:1.45rem;flex-shrink:0;line-height:1;}/* 靜止 */
+.htxt{flex:1;min-width:0;}
+.htxt h1{font-size:.88rem;font-weight:900;color:#7a2048;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.htxt p{font-size:.53rem;color:#c06080;font-weight:700;margin-top:1px;}
+.hbtns{display:flex;gap:5px;flex-shrink:0;}
+.hbtn{padding:0;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;
+  transition:all .18s;box-shadow:0 2px 8px var(--sp);border-radius:18px;}
+.hbtn-sel{background:#fff;color:var(--sub);font-size:.62rem;padding:7px 10px;}
+.hbtn-add{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;font-size:.62rem;padding:7px 11px;}
+.hbtn-icon{background:#fff;color:var(--sub);width:34px;height:34px;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;border-radius:50%;}
+.hbtn:hover{transform:translateY(-1px);box-shadow:0 4px 14px var(--sp2);}
+.hbtn:active{transform:scale(.94);}
+
+/* ════ STATS BAR ════ */
+.stats-bar{display:flex;margin:7px 14px 0;background:#fff;border-radius:14px;
+  box-shadow:0 2px 10px var(--sd);overflow:hidden;flex-shrink:0;}
+.sitem{flex:1;display:flex;flex-direction:column;align-items:center;padding:6px 4px 7px;
+  border-right:1px solid var(--bd);}
+.sitem:last-child{border-right:none;}
+.sn{font-size:1.05rem;font-weight:900;line-height:1;}
+.sl{font-size:.48rem;font-weight:800;color:var(--sub);margin-top:2px;}
+
+/* ════ BATCH BAR ════ */
+.batch-bar{background:linear-gradient(135deg,#fff0f5,#fff8ee);border-bottom:1.5px solid var(--bd);
+  padding:7px 14px;display:none;align-items:center;justify-content:space-between;
+  flex-shrink:0;gap:8px;flex-wrap:wrap;}
+.batch-bar.show{display:flex;}
+.binfo{font-size:.7rem;font-weight:800;color:var(--sub);}
+.bacts{display:flex;gap:5px;flex-wrap:wrap;}
+.bbtn{padding:6px 10px;border-radius:12px;border:none;font-family:'Nunito',sans-serif;
+  font-size:.61rem;font-weight:800;cursor:pointer;transition:all .18s;}
+.bbtn-s{background:#e0eeff;color:#1a4aaa;}
+.bbtn-d{background:#ffe0e8;color:#c02050;}
+.bbtn-c{background:#f0e8f0;color:var(--sub);}
+.bbtn-a{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;}
+.bbtn:hover{transform:translateY(-1px);}
+
+/* ════ FILTER STRIP ════ */
+.filter-strip{flex-shrink:0;padding:7px 0 0;}
+.status-row,.cat-row{display:flex;gap:5px;padding:0 14px;overflow-x:auto;scrollbar-width:none;}
+.status-row{padding-bottom:5px;border-bottom:1px solid var(--bd);}
+.cat-row{padding-top:5px;}
+.status-row::-webkit-scrollbar,.cat-row::-webkit-scrollbar{display:none;}
+.stab{flex-shrink:0;padding:5px 13px;border-radius:30px;font-size:.63rem;font-weight:800;
+  cursor:pointer;background:#f0e0e8;color:var(--sub);border:none;transition:all .2s;
+  box-shadow:0 1px 4px var(--sd);}
+.stab.active{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;box-shadow:0 3px 10px var(--sp2);}
+.ctab{flex-shrink:0;padding:4px 10px;border-radius:20px;font-size:.61rem;font-weight:800;
+  cursor:pointer;background:transparent;color:var(--sub);border:1.5px solid var(--bd);
+  transition:all .2s;white-space:nowrap;}
+.ctab.active{background:var(--tx);color:#fff;border-color:var(--tx);}
+
+/* ════ MAIN ════ */
+.main{flex:1;overflow-y:auto;padding:10px 14px 86px;-webkit-overflow-scrolling:touch;}
+
+/* ════ GRID VIEW ════ */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;}
+.ccard{background:#fff;border-radius:20px;box-shadow:0 4px 16px var(--sp),0 1px 5px var(--sd);
+  overflow:hidden;cursor:pointer;position:relative;transition:transform .18s,box-shadow .18s;}
+.ccard:hover{transform:translateY(-3px);box-shadow:0 10px 28px var(--sp2);}
+.ccard.selected{outline:3px solid var(--p2);outline-offset:2px;}
+.ccard-ck{position:absolute;top:8px;left:8px;width:24px;height:24px;border-radius:50%;
+  background:#fff;border:2px solid var(--bd);display:none;align-items:center;justify-content:center;
+  font-size:.78rem;z-index:3;box-shadow:0 2px 8px var(--sd);}
+.ccard.selected .ccard-ck{background:var(--p2);border-color:var(--p2);color:#fff;}
+.batch-mode .ccard-ck{display:flex;}
+.ccard-img{width:100%;height:118px;background:linear-gradient(135deg,#fce4ec,#fff3e0);
+  display:flex;align-items:center;justify-content:center;font-size:2.5rem;position:relative;overflow:hidden;}
+.ccard-img img{width:100%;height:100%;object-fit:cover;}
+.cbadge{position:absolute;bottom:7px;right:7px;z-index:2;}
+.ccard-body{padding:9px 11px 11px;}
+.ccard-name{font-size:.77rem;font-weight:900;line-height:1.3;margin-bottom:5px;}
+.ccard-tags{display:flex;flex-wrap:wrap;gap:4px;}
+.ctag{display:inline-flex;align-items:center;gap:2px;padding:2px 7px;border-radius:10px;
+  font-size:.53rem;font-weight:800;background:var(--cr);color:var(--sub);}
+.ctag-mint{background:#e4f8f0;color:#2a8060;}
+
+/* ════ LIST VIEW ════ */
+.list-view{display:flex;flex-direction:column;gap:8px;}
+.lcard{background:#fff;border-radius:16px;box-shadow:0 3px 12px var(--sp),0 1px 4px var(--sd);
+  display:flex;align-items:center;gap:12px;padding:10px 12px;cursor:pointer;
+  position:relative;transition:transform .15s;}
+.lcard:hover{transform:translateX(3px);}
+.lcard.selected{outline:3px solid var(--p2);outline-offset:1px;}
+.lcard-ck{width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid var(--bd);
+  display:none;align-items:center;justify-content:center;font-size:.72rem;flex-shrink:0;}
+.lcard.selected .lcard-ck{background:var(--p2);border-color:var(--p2);color:#fff;}
+.batch-mode .lcard-ck{display:flex;}
+.lcard-thumb{width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,#fce4ec,#fff3e0);
+  display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;overflow:hidden;}
+.lcard-thumb img{width:100%;height:100%;object-fit:cover;}
+.lcard-info{flex:1;min-width:0;}
+.lcard-name{font-size:.78rem;font-weight:900;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lcard-meta{font-size:.58rem;font-weight:700;color:var(--sub);line-height:1.7;}
+.lcard-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+
+.status-pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.53rem;font-weight:800;}
+.s-cur{background:#d0f5e8;color:#1a7050;}
+.s-fut{background:#d0e8ff;color:#1a4a80;}
+.s-grc{background:#fff8d0;color:#7a5800;}
+.s-old{background:#f0d0f8;color:#5a1a7a;}
+.s-don{background:#ffe0d0;color:#7a2a0a;}
+
+/* ════ EMPTY STATE ════ */
+.empty-state{text-align:center;padding:44px 20px 32px;grid-column:span 2;}
+.empty-cat{font-size:3.2rem;margin-bottom:10px;animation:floatCat 2.6s ease-in-out infinite;}
+@keyframes floatCat{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-10px) rotate(2deg);}}
+.empty-msg{font-size:.8rem;font-weight:700;line-height:2;color:#c07090;margin-bottom:20px;}
+.empty-btn{display:inline-block;padding:14px 32px;border-radius:26px;border:none;
+  background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;
+  font-family:'Nunito',sans-serif;font-size:.92rem;font-weight:900;cursor:pointer;
+  box-shadow:0 6px 22px var(--sp2);transition:all .2s;}
+.empty-btn:active{transform:scale(.96);}
+
+/* ════ ZONE VIEW ════ */
+.zone-toolbar{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px 6px;flex-shrink:0;}
+.zone-toolbar span{font-size:.72rem;font-weight:800;color:var(--sub);}
+.zbtn-add{padding:7px 13px;border-radius:20px;border:none;
+  background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;
+  font-family:'Nunito',sans-serif;font-size:.65rem;font-weight:800;cursor:pointer;}
+.zone-list{display:flex;flex-direction:column;gap:10px;}
+.zcard{background:#fff;border-radius:20px;box-shadow:0 3px 14px var(--sp),0 1px 4px var(--sd);overflow:hidden;}
+.zcard-top{display:flex;gap:12px;align-items:flex-start;padding:13px 14px 10px;cursor:pointer;}
+.zicon{font-size:1.7rem;flex-shrink:0;}
+.zinfo{flex:1;}
+.zcard-name{font-size:.86rem;font-weight:900;margin-bottom:2px;}
+.zdesc{font-size:.66rem;color:var(--sub);line-height:1.85;font-weight:600;}
+.zbadge{display:inline-block;margin-top:4px;background:var(--cr);border-radius:10px;
+  padding:2px 10px;font-size:.57rem;font-weight:800;color:var(--sub);}
+.zmiao{background:linear-gradient(135deg,#fff8f0,#fce4ec);border-top:1px dashed var(--bd);
+  padding:8px 14px 10px;font-size:.65rem;font-weight:700;color:#a04060;line-height:1.7;display:none;}
+.zmiao.show{display:block;}
+.zcard-actions{display:flex;gap:6px;padding:0 14px 11px;}
+.zact-btn{padding:5px 12px;border-radius:14px;border:none;font-family:'Nunito',sans-serif;
+  font-size:.61rem;font-weight:800;cursor:pointer;transition:all .18s;}
+.zact-filter{background:#e8f0ff;color:#1a4aaa;}
+.zact-edit{background:var(--cr);color:var(--sub);}
+.zact-del{background:#ffe0e8;color:#c02050;}
+.zact-btn:hover{transform:translateY(-1px);}
+.zcnt{font-size:.58rem;font-weight:700;color:var(--p2);margin-left:4px;}
+
+/* ════ ADD VIEW ════ */
+.add-header{background:linear-gradient(135deg,#fce4ec,#ffecd8);padding:12px 16px;
+  display:flex;align-items:center;gap:12px;flex-shrink:0;box-shadow:0 3px 14px var(--sp);}
+.back-btn{background:#fff;border:none;border-radius:50%;width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;
+  box-shadow:0 2px 10px var(--sd);transition:all .18s;flex-shrink:0;}
+.back-btn:hover{transform:scale(1.08);}
+.add-header h2{font-size:.95rem;font-weight:900;color:#7a2048;}
+.add-scroll{flex:1;overflow-y:auto;padding:14px 16px 16px;}
+.add-footer{flex-shrink:0;background:#fff;padding:12px 16px 22px;
+  border-top:1.5px solid var(--bd);box-shadow:0 -3px 16px var(--sd);}
+.save-btn{width:100%;padding:14px;border-radius:20px;border:none;
+  background:linear-gradient(135deg,var(--p1),var(--p2));
+  font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:900;
+  color:#fff;cursor:pointer;box-shadow:0 5px 20px var(--sp2);transition:all .2s;}
+.save-btn:active{transform:scale(.97);}
+.sdiv{font-size:.6rem;font-weight:900;color:var(--sub);letter-spacing:1.5px;
+  margin:18px 0 10px;display:flex;align-items:center;gap:8px;}
+.sdiv::after{content:'';flex:1;height:1.5px;background:var(--bd);}
+.frow{margin-bottom:12px;}
+.frow label{font-size:.66rem;font-weight:800;color:var(--sub);display:block;margin-bottom:4px;}
+.frow input,.frow select,.frow textarea{
+  width:100%;padding:10px 13px;border-radius:14px;border:2px solid var(--bd);
+  font-family:'Nunito',sans-serif;font-size:.8rem;font-weight:700;
+  color:var(--tx);background:var(--cr);outline:none;transition:border-color .2s;}
+.frow input:focus,.frow select:focus,.frow textarea:focus{border-color:var(--p2);background:#fff;}
+.frow textarea{resize:vertical;min-height:52px;}
+.frow-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.frow-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.photo-upload{width:100%;height:110px;border:2.5px dashed var(--bd);border-radius:18px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  cursor:pointer;background:var(--cr);transition:border-color .2s;position:relative;overflow:hidden;}
+.photo-upload:hover{border-color:var(--p2);}
+.photo-upload img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:16px;}
+.photo-hint{font-size:.67rem;font-weight:800;color:var(--sub);}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.chip{padding:5px 12px;border-radius:20px;font-size:.64rem;font-weight:800;
+  border:2px solid var(--bd);background:#fff;color:var(--sub);cursor:pointer;transition:all .18s;}
+.chip.sel-size{background:linear-gradient(135deg,#fce4ec,var(--p1));color:#8b2048;border-color:var(--p1);}
+.chip.sel-src{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;border-color:transparent;}
+.chip.sel-loc{background:linear-gradient(135deg,var(--m1),var(--m2));color:#fff;border-color:transparent;}
+.chip.sel-ssn{background:linear-gradient(135deg,#e0f8ec,#b8f0d4);color:#1a6a40;border-color:#90d8b0;}
+.chip.sel-slv{background:linear-gradient(135deg,#e8f0ff,#c8d8ff);color:#2040a0;border-color:#b0c4f8;}
+.sub-input{margin-top:8px;border-radius:14px;border:2px solid var(--bd);padding:10px 13px;
+  width:100%;font-family:Nunito,sans-serif;font-size:.8rem;font-weight:700;
+  background:var(--cr);outline:none;color:var(--tx);transition:border-color .2s;display:block;}
+.sub-input:focus{border-color:var(--p2);background:#fff;}
+.size-custom-row{display:flex;gap:8px;align-items:center;margin-top:8px;}
+.size-custom-row input{flex:1;border-radius:14px;border:2px solid var(--bd);padding:9px 12px;
+  font-family:Nunito,sans-serif;font-size:.8rem;font-weight:700;background:var(--cr);
+  outline:none;color:var(--tx);transition:border-color .2s;}
+.size-custom-row input:focus{border-color:var(--p2);background:#fff;}
+.clear-size{background:none;border:none;font-size:.75rem;cursor:pointer;color:var(--sub);padding:4px 6px;}
+
+/* ════ OVERLAYS ════ */
+.overlay{display:none;position:fixed;inset:0;background:rgba(40,8,24,.38);z-index:300;
+  align-items:flex-end;justify-content:center;}
+.overlay.show{display:flex;}
+.modal{background:#fff;border-radius:28px 28px 0 0;width:100%;max-width:520px;
+  max-height:92vh;overflow-y:auto;padding:20px 18px 38px;
+  animation:slideUp .25s cubic-bezier(.34,1.4,.64,1);
+  box-shadow:0 -10px 40px rgba(200,50,100,.16);}
+@keyframes slideUp{from{transform:translateY(110px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:40px;height:4px;background:#f0d0dc;border-radius:4px;margin:0 auto 18px;}
+.modal h3{font-size:.98rem;font-weight:900;color:var(--sub);margin-bottom:14px;}
+.modal-btns{display:flex;gap:10px;margin-top:14px;}
+.mbtn-c{flex:1;padding:12px;border-radius:16px;border:2px solid var(--bd);background:#fff;
+  font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:800;color:var(--sub);cursor:pointer;}
+.mbtn-a{flex:2;padding:12px;border-radius:16px;border:none;
+  background:linear-gradient(135deg,var(--p1),var(--p2));
+  font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:800;color:#fff;cursor:pointer;}
+.mbtn-danger{flex:2;padding:12px;border-radius:16px;border:none;
+  background:linear-gradient(135deg,#ffb0c0,#f04060);
+  font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:800;color:#fff;cursor:pointer;}
+.detail-img{width:100%;height:192px;border-radius:22px;
+  background:linear-gradient(135deg,#fce4ec,#fff3e0);
+  display:flex;align-items:center;justify-content:center;font-size:4rem;margin-bottom:14px;overflow:hidden;}
+.detail-img img{width:100%;height:100%;object-fit:cover;}
+.detail-row{display:flex;justify-content:space-between;align-items:flex-start;
+  padding:8px 0;border-bottom:1px dashed var(--bd);font-size:.76rem;}
+.detail-row:last-child{border-bottom:none;}
+.detail-key{color:var(--sub);font-weight:800;width:68px;flex-shrink:0;}
+.detail-val{font-weight:700;text-align:right;flex:1;}
+.bstatus-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;}
+.bstatus-btn{padding:12px 4px;border-radius:16px;border:2px solid var(--bd);background:#fff;
+  font-family:'Nunito',sans-serif;font-size:.68rem;font-weight:800;cursor:pointer;
+  text-align:center;transition:all .2s;line-height:1.8;}
+.bstatus-btn:hover{border-color:var(--p1);background:#fff5f8;}
+
+/* ════ CAT CONFIRM MODAL ════ */
+.cat-confirm{background:#fff;border-radius:28px 28px 0 0;width:100%;max-width:480px;
+  padding:22px 20px 36px;animation:slideUp .25s cubic-bezier(.34,1.4,.64,1);
+  box-shadow:0 -10px 40px rgba(200,50,100,.16);}
+.cat-confirm-icon{font-size:2.8rem;text-align:center;margin-bottom:10px;}/* 靜止 */
+.cat-confirm-title{font-size:.95rem;font-weight:900;color:#7a2048;text-align:center;margin-bottom:6px;}
+.cat-confirm-msg{font-size:.78rem;font-weight:700;color:var(--sub);text-align:center;line-height:1.7;margin-bottom:16px;}
+.cat-confirm-btns{display:flex;gap:10px;}
+
+/* ════ IMPORT MODAL ════ */
+.import-preview{background:var(--cr);border-radius:12px;padding:12px;margin-top:10px;
+  max-height:200px;overflow-y:auto;font-size:.68rem;font-weight:700;color:var(--tx);line-height:1.8;}
+.import-preview table{width:100%;border-collapse:collapse;}
+.import-preview th{background:var(--p1);color:#7a2048;padding:4px 8px;text-align:left;font-size:.6rem;border-radius:4px;}
+.import-preview td{padding:3px 8px;border-bottom:1px solid var(--bd);font-size:.6rem;}
+.import-step{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);}
+.import-step:last-child{border-bottom:none;}
+.import-step-num{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--p1),var(--p2));
+  color:#fff;font-size:.65rem;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.import-step-txt{font-size:.73rem;font-weight:700;color:var(--tx);line-height:1.5;}
+.import-upload-area{border:2.5px dashed var(--bd);border-radius:16px;padding:20px;
+  text-align:center;cursor:pointer;background:var(--cr);transition:border-color .2s;margin-top:10px;}
+.import-upload-area:hover{border-color:var(--p2);}
+.import-upload-area p{font-size:.75rem;font-weight:700;color:var(--sub);margin-top:6px;}
+.template-btn{display:inline-block;margin-top:10px;padding:8px 16px;border-radius:14px;border:none;
+  background:linear-gradient(135deg,#e8f0ff,#c8d8ff);color:#2040a0;
+  font-family:'Nunito',sans-serif;font-size:.7rem;font-weight:800;cursor:pointer;}
+.import-result{padding:10px;border-radius:12px;margin-top:8px;font-size:.72rem;font-weight:700;}
+.import-result.ok{background:#d0f5e8;color:#1a7050;}
+.import-result.err{background:#ffe0e8;color:#c02050;}
+
+/* ════ SETTINGS DRAWER ════ */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(40,8,24,.32);z-index:400;}
+.drawer-overlay.show{display:block;}
+.drawer{position:fixed;top:0;right:-100%;bottom:0;width:min(300px,80vw);background:#fff;
+  box-shadow:-8px 0 40px rgba(40,8,24,.18);z-index:401;display:flex;flex-direction:column;
+  transition:right .28s cubic-bezier(.4,0,.2,1);border-radius:28px 0 0 28px;}
+.drawer.open{right:0;}
+.drawer-head{background:linear-gradient(135deg,#fce4ec,#ffecd8);padding:20px 18px 14px;border-radius:28px 0 0 0;}
+.drawer-head h3{font-size:.95rem;font-weight:900;color:#7a2048;}
+.drawer-head p{font-size:.6rem;color:var(--sub);font-weight:700;margin-top:2px;}
+.drawer-close{position:absolute;top:16px;right:16px;background:#fff;border:none;border-radius:50%;
+  width:30px;height:30px;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.drawer-body{flex:1;overflow-y:auto;padding:16px 16px 30px;}
+.dsec{font-size:.6rem;font-weight:900;color:var(--sub);letter-spacing:1.5px;
+  margin:14px 0 8px;display:flex;align-items:center;gap:6px;}
+.dsec::after{content:'';flex:1;height:1px;background:var(--bd);}
+.dbtn{width:100%;padding:12px 14px;border-radius:16px;border:none;font-family:'Nunito',sans-serif;
+  font-size:.8rem;font-weight:800;cursor:pointer;text-align:left;display:flex;align-items:center;
+  gap:10px;margin-bottom:8px;transition:all .18s;}
+.dbtn:hover{transform:translateY(-1px);}
+.dbtn-json{background:linear-gradient(135deg,#fce4ec,#ffd6e0);color:#8b2048;}
+.dbtn-imp{background:linear-gradient(135deg,#e8f8f2,#d0f5e8);color:#1a6a4a;}
+.dbtn-xl{background:linear-gradient(135deg,#e8f8ee,#c8f0d8);color:#1a5a30;}
+.dbtn-csv{background:linear-gradient(135deg,#e8f0ff,#d0e4ff);color:#1a3a8a;}
+.dbtn-rst{background:#fff0f0;color:#c02020;}
+.di{font-size:1.2rem;flex-shrink:0;}
+.dt strong{display:block;font-size:.78rem;}
+.dt span{font-size:.62rem;opacity:.75;}
+
+/* ════ MIAO TOAST ════ */
+.miao-toast{position:fixed;top:16px;left:50%;
+  transform:translateX(-50%) translateY(-120px) scale(.88);
+  background:#fff;border:2.5px solid var(--p1);border-radius:22px;
+  padding:12px 16px 12px 13px;min-width:272px;max-width:330px;
+  box-shadow:0 10px 36px var(--sp2);z-index:999;
+  display:flex;align-items:flex-start;gap:10px;
+  opacity:0;pointer-events:none;
+  transition:transform .42s cubic-bezier(.34,1.56,.64,1),opacity .34s ease;}
+.miao-toast.show{transform:translateX(-50%) translateY(0) scale(1);opacity:1;}
+.miao-toast.hide{transform:translateX(-50%) translateY(-100px) scale(.88);opacity:0;}
+.tcat{font-size:1.6rem;flex-shrink:0;line-height:1;}/* 靜止 */
+.tlbl{font-size:.61rem;font-weight:900;color:var(--p2);margin-bottom:2px;}
+.tmsg{font-size:.73rem;font-weight:700;color:var(--tx);line-height:1.55;}
+.tbar{height:3px;background:linear-gradient(90deg,var(--p1),var(--p2));
+  border-radius:3px;margin-top:8px;animation:shrink linear forwards;}
+@keyframes shrink{from{width:100%}to{width:0%;}}
+
+/* ════ SUCCESS OVERLAY ════ */
+.success-overlay{position:fixed;inset:0;z-index:998;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:rgba(252,228,236,.88);backdrop-filter:blur(6px);
+  opacity:0;pointer-events:none;transition:opacity .3s;}
+.success-overlay.show{opacity:1;pointer-events:auto;}
+.success-paw{font-size:5rem;animation:pawPop .5s cubic-bezier(.34,1.8,.64,1) forwards;line-height:1;}
+@keyframes pawPop{from{transform:scale(0) rotate(-20deg);}to{transform:scale(1) rotate(0);}}
+.success-check{position:absolute;font-size:2.2rem;animation:checkPop .4s .3s cubic-bezier(.34,1.8,.64,1) both;}
+@keyframes checkPop{from{transform:scale(0);}to{transform:scale(1);}}
+.success-txt{margin-top:18px;font-size:.9rem;font-weight:900;color:#7a2048;
+  animation:fadeUp .4s .4s both;}
+@keyframes fadeUp{from{transform:translateY(10px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+/* ════ BOTTOM NAV ════ */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:8px 16px 18px;
+  display:flex;gap:6px;box-shadow:0 -3px 20px rgba(200,80,120,.1);z-index:50;}
+.nbtn{flex:1;padding:9px 4px;border-radius:16px;border:none;font-family:'Nunito',sans-serif;
+  font-size:.6rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;gap:2px;background:var(--bg);color:var(--sub);transition:all .2s;}
+.nbtn span:first-child{font-size:1.05rem;}
+.nbtn.active{background:linear-gradient(135deg,#fce4ec,#ffecd8);color:#8b2048;}
+</style>
+</head>
+<body>
+
+<!-- ══════════ WELCOME ══════════ -->
+<div class="view active" id="view-welcome">
+  <span class="wcat">🐈</span>
+  <div class="bubble">
+    <p>喵～本喵是<strong>小嘟的專屬衣櫃管家</strong>🐾<br>
+    輸入家庭代號，兩個人都能查看衣櫃！<br>踩踩踩，我們進去瞧瞧吧！</p>
+  </div>
+  <div class="wtitle">✨ 小嘟的電子衣櫃 ✨</div>
+  <div style="width:100%;max-width:320px;margin:0 auto 16px;">
+    <div style="font-size:11px;color:#c06080;font-weight:700;text-align:left;margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase;">家庭代號</div>
+    <input id="wardRoomInput" style="width:100%;padding:13px 16px;border:2px solid #f9c4d2;border-radius:16px;background:#fff8f4;font-family:'Nunito',sans-serif;font-size:20px;color:#3a2030;outline:none;text-align:center;letter-spacing:5px;font-weight:800;margin-bottom:10px;" placeholder="例：myfamily" maxlength="20" onkeydown="if(event.key==='Enter')wardLogin()">
+    <div id="wardLoginErr" style="color:#c05050;font-size:12px;margin-bottom:8px;min-height:16px;text-align:center;"></div>
+  </div>
+  <button class="wbtn" onclick="wardLogin()">🐾 跟著喵管家進去！</button>
+  <div style="font-size:11px;color:#c06080;margin-top:12px;line-height:1.7;text-align:center;">與家務秘書、庫存管家輸入<b style="color:#e8527a;">相同代號</b>即可同步</div>
+</div>
+
+<!-- ══════════ HOME ══════════ -->
+<div class="view" id="view-home">
+  <div class="app-header">
+    <div class="hrow">
+      <div class="hcat">🐈</div>
+      <div class="htxt">
+        <h1>✨ 小嘟的電子衣櫃 ✨</h1>
+        <p id="header-sub">喵管家準備好了 🐾 <span id="ward-sync-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f9c4d2;vertical-align:middle;margin-left:3px;"></span></p>
+      </div>
+      <div class="hbtns">
+        <button class="hbtn hbtn-sel" id="btn-select" onclick="toggleBatch()">☑️ 選取</button>
+        <button class="hbtn hbtn-icon" id="btn-view" onclick="toggleView()" title="切換顯示">⊞</button>
+        <button class="hbtn hbtn-add" onclick="goAdd()">＋ 新增</button>
+        <button class="hbtn hbtn-icon" onclick="openDrawer()">⚙️</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-bar" id="stats-bar"></div>
+
+  <div class="batch-bar" id="batch-bar">
+    <div class="binfo" id="batch-info">已選 0 件</div>
+    <div class="bacts">
+      <button class="bbtn bbtn-a" onclick="selectAll()">全選</button>
+      <button class="bbtn bbtn-s" onclick="openBatchStatus()">📝 改狀態</button>
+      <button class="bbtn bbtn-d" onclick="batchDeleteConfirm()">🗑 刪除</button>
+      <button class="bbtn bbtn-c" onclick="toggleBatch()">✕ 取消</button>
+    </div>
+  </div>
+
+  <div class="filter-strip">
+    <div class="status-row">
+      <div class="stab active" onclick="setStatus('all',this)">🐾 全部</div>
+      <div class="stab" onclick="setStatus('當季',this)">✅ 當季</div>
+      <div class="stab" onclick="setStatus('未來',this)">📦 未來</div>
+      <div class="stab" onclick="setStatus('恩典牌',this)">🎁 恩典牌</div>
+      <div class="stab" onclick="setStatus('穿不下',this)">🚫 穿不下</div>
+      <div class="stab" onclick="setStatus('轉送',this)">🌈 轉送</div>
+    </div>
+    <div class="cat-row">
+      <div class="ctab active" onclick="setCat('all',this)">全部類別</div>
+      <div class="ctab" onclick="setCat('👕 上衣',this)">👕 上衣</div>
+      <div class="ctab" onclick="setCat('👗 洋裝/連身',this)">👗 洋裝/連身</div>
+      <div class="ctab" onclick="setCat('👖 褲子',this)">👖 褲子</div>
+      <div class="ctab" onclick="setCat('🌸 雪紡/襯衫',this)">🌸 雪紡</div>
+      <div class="ctab" onclick="setCat('🧥 外套',this)">🧥 外套</div>
+      <div class="ctab" onclick="setCat('👶 包屁衣',this)">👶 包屁衣</div>
+      <div class="ctab" onclick="setCat('😴 睡衣',this)">😴 睡衣</div>
+      <div class="ctab" onclick="setCat('🧦 褲襪/襪子',this)">🧦 褲襪</div>
+      <div class="ctab" onclick="setCat('🎀 配件',this)">🎀 配件</div>
+      <div class="ctab" onclick="setCat('🛁 浴巾/毛毯',this)">🛁 浴巾</div>
+    </div>
+  </div>
+
+  <div class="main" id="main-area">
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="bnav">
+    <button class="nbtn active" id="nav-home" onclick="setHomeNav(this)"><span>👗</span><span>衣物</span></button>
+    <button class="nbtn" onclick="goZone();setHomeNav(this)"><span>📦</span><span>分區</span></button>
+  </div>
+</div>
+
+<!-- ══════════ ZONE ══════════ -->
+<div class="view" id="view-zone">
+  <div class="app-header">
+    <div class="hrow">
+      <div class="hcat">🐈</div>
+      <div class="htxt"><h1>衣櫃分區管理</h1><p>點分區可篩選衣服，可自由編輯 🐾</p></div>
+    </div>
+  </div>
+  <div class="zone-toolbar">
+    <span>共 <b id="zone-count">0</b> 個分區</span>
+    <button class="zbtn-add" onclick="openZoneEdit(null)">＋ 新增分區</button>
+  </div>
+  <div class="main" style="padding-top:4px;padding-bottom:90px;">
+    <div class="zone-list" id="zone-list"></div>
+  </div>
+  <div class="bnav">
+    <button class="nbtn" onclick="goHome()"><span>👗</span><span>衣物</span></button>
+    <button class="nbtn active"><span>📦</span><span>分區</span></button>
+  </div>
+</div>
+
+<!-- ══════════ ADD / EDIT ══════════ -->
+<div class="view" id="view-add">
+  <div class="add-header">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <h2 id="add-title">🐾 新增新衣服</h2>
+  </div>
+  <div class="add-scroll">
+
+    <div class="sdiv">📸 照片</div>
+    <div class="frow">
+      <div class="photo-upload" id="photo-box" onclick="document.getElementById('photo-input').click()">
+        <span style="font-size:1.7rem">📷</span>
+        <span class="photo-hint">點擊上傳照片</span>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhoto(this)">
+    </div>
+
+    <div class="sdiv">🏷️ 基本資料</div>
+    <div class="frow-2">
+      <div class="frow" style="margin:0"><label>衣物名稱 *</label><input id="f-name" placeholder="例：草莓印花洋裝"></div>
+      <div class="frow" style="margin:0"><label>類型</label>
+        <select id="f-cat">
+          <option>👕 上衣</option><option>👗 洋裝/連身</option><option>👖 褲子</option>
+          <option>🌸 雪紡/襯衫</option><option>🧥 外套</option><option>👶 包屁衣</option>
+          <option>😴 睡衣</option><option>🧦 褲襪/襪子</option><option>🎀 配件</option><option>🛁 浴巾/毛毯</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sdiv" style="margin-top:14px;">📏 尺碼</div>
+    <div class="frow">
+      <div class="chips" id="size-chips">
+        <div class="chip" onclick="selSize(this,'70')">70</div>
+        <div class="chip" onclick="selSize(this,'80')">80</div>
+        <div class="chip" onclick="selSize(this,'90')">90</div>
+        <div class="chip" onclick="selSize(this,'100')">100</div>
+        <div class="chip" onclick="selSize(this,'12M')">12M</div>
+        <div class="chip" onclick="selSize(this,'18M')">18M</div>
+        <div class="chip" onclick="selSize(this,'24M')">24M</div>
+        <div class="chip" onclick="selSize(this,'2T')">2T</div>
+      </div>
+      <div class="size-custom-row">
+        <input id="f-size" placeholder="或自行輸入尺碼…" oninput="clearSizeChips()">
+        <button class="clear-size" onclick="clearSize()">✕</button>
+      </div>
+    </div>
+
+    <div class="sdiv">🌤️ 季節（可複選）& 袖長</div>
+    <div class="frow">
+      <label>季節（可複選）</label>
+      <div class="chips" id="season-chips">
+        <div class="chip" onclick="toggleSsn(this,'春季')">🌸 春季</div>
+        <div class="chip" onclick="toggleSsn(this,'夏季')">☀️ 夏季</div>
+        <div class="chip" onclick="toggleSsn(this,'秋季')">🍂 秋季</div>
+        <div class="chip" onclick="toggleSsn(this,'冬季')">❄️ 冬季</div>
+        <div class="chip" onclick="toggleSsn(this,'四季')">🌈 四季</div>
+      </div>
+    </div>
+    <div class="frow">
+      <label>厚度 / 袖長</label>
+      <div class="chips" id="sleeve-chips">
+        <div class="chip" onclick="selSlv(this,'短袖')">短袖</div>
+        <div class="chip" onclick="selSlv(this,'長袖')">長袖</div>
+        <div class="chip" onclick="selSlv(this,'無袖')">無袖</div>
+        <div class="chip" onclick="selSlv(this,'加厚')">🧸 加厚</div>
+      </div>
+    </div>
+    <div class="frow-2" style="margin-top:4px;">
+      <div class="frow" style="margin:0"><label>顏色</label><input id="f-color" placeholder="粉紅"></div>
+      <div class="frow" style="margin:0"><label>狀態</label>
+        <select id="f-status">
+          <option value="當季">✅ 當季穿</option><option value="未來">📦 未來才穿</option>
+          <option value="恩典牌">🎁 恩典牌待整理</option><option value="穿不下">🚫 穿不下了</option><option value="轉送">🌈 準備轉送</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sdiv">🎁 來源</div>
+    <div class="frow">
+      <div class="chips" id="src-chips">
+        <div class="chip" onclick="selSrc(this,'自購')">🛍 自購</div>
+        <div class="chip" onclick="selSrc(this,'恩典牌')">🎁 恩典牌</div>
+        <div class="chip" onclick="selSrc(this,'禮物')">🎀 禮物</div>
+        <div class="chip" onclick="selSrc(this,'二手購入')">♻️ 二手</div>
+        <div class="chip" onclick="selSrc(this,'其他')">⋯ 其他</div>
+      </div>
+      <input class="sub-input" id="f-source-who" placeholder="誰給的？（選填）">
+    </div>
+    <div class="frow-2">
+      <div class="frow" style="margin:0"><label>💰 價格（NT$）</label><input id="f-price" type="number" placeholder="0"></div>
+      <div class="frow" style="margin:0"><label>品牌</label><input id="f-brand" placeholder="例：Carter's"></div>
+    </div>
+
+    <div class="sdiv">📍 擺放位置</div>
+    <div class="frow">
+      <div class="chips" id="loc-chips"></div>
+      <input class="sub-input" id="f-loc-custom" placeholder="或直接輸入位置⋯">
+    </div>
+
+    <div class="sdiv">📝 備註</div>
+    <div class="frow"><textarea id="f-note" placeholder="喵～有什麼補充說明嗎？"></textarea></div>
+  </div>
+  <div class="add-footer">
+    <button class="save-btn" onclick="saveItem()">🐾 讓喵管家收好它！</button>
+  </div>
+</div>
+
+<!-- ══ DETAIL MODAL ══ -->
+<div class="overlay" id="detail-overlay">
+<div class="modal">
+  <div class="modal-handle"></div>
+  <div class="detail-img" id="d-img"></div>
+  <div id="d-rows"></div>
+  <div class="modal-btns" style="margin-top:14px;">
+    <button class="mbtn-c" onclick="closeDetail()">關閉</button>
+    <button class="mbtn-a" onclick="editCurrent()">✏️ 編輯</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ BATCH STATUS MODAL ══ -->
+<div class="overlay" id="bstatus-overlay">
+<div class="modal">
+  <div class="modal-handle"></div>
+  <h3>🐾 批量改狀態</h3>
+  <p style="font-size:.73rem;color:var(--sub);font-weight:700;margin-bottom:4px;" id="bstatus-hint"></p>
+  <div class="bstatus-grid">
+    <button class="bstatus-btn" onclick="applyBatch('當季')">✅<br>當季穿</button>
+    <button class="bstatus-btn" onclick="applyBatch('未來')">📦<br>未來穿</button>
+    <button class="bstatus-btn" onclick="applyBatch('恩典牌')">🎁<br>恩典牌</button>
+    <button class="bstatus-btn" onclick="applyBatch('穿不下')">🚫<br>穿不下</button>
+    <button class="bstatus-btn" onclick="applyBatch('轉送')">🌈<br>轉送</button>
+  </div>
+  <div class="modal-btns"><button class="mbtn-c" onclick="closeBatchStatus()">取消</button></div>
+</div>
+</div>
+
+<!-- ══ ZONE EDIT MODAL ══ -->
+<div class="overlay" id="zone-edit-overlay">
+<div class="modal">
+  <div class="modal-handle"></div>
+  <h3 id="zedit-title">🐾 新增分區</h3>
+  <div class="frow"><label>分區圖示（emoji）</label><input id="ze-icon" placeholder="例：📦" maxlength="4"></div>
+  <div class="frow"><label>分區名稱 *</label><input id="ze-name" placeholder="例：木頭抽屜"></div>
+  <div class="frow"><label>說明（選填）</label><textarea id="ze-desc" placeholder="收納什麼衣服…" style="min-height:56px;"></textarea></div>
+  <div class="frow"><label>喵管家提示（選填）</label><input id="ze-badge" placeholder="例：直立折疊放，一眼看完"></div>
+  <div class="modal-btns">
+    <button class="mbtn-c" onclick="closeZoneEdit()">取消</button>
+    <button class="mbtn-a" onclick="previewSaveZone()">下一步 →</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ IMPORT MODAL ══ -->
+<div class="overlay" id="import-overlay">
+<div class="modal">
+  <div class="modal-handle"></div>
+  <h3>📥 批量匯入衣物</h3>
+  <div class="import-step">
+    <div class="import-step-num">1</div>
+    <div class="import-step-txt">下載範本，填寫衣物資料（Excel 或 CSV）</div>
+  </div>
+  <div class="import-step">
+    <div class="import-step-num">2</div>
+    <div class="import-step-txt">欄位：名稱、類型、尺碼、季節、狀態、位置、來源、品牌、價格、備註</div>
+  </div>
+  <div class="import-step">
+    <div class="import-step-num">3</div>
+    <div class="import-step-txt">上傳檔案，喵管家幫你全部叼進來！</div>
+  </div>
+  <button class="template-btn" onclick="downloadTemplate()">⬇️ 下載 Excel 範本</button>
+  <div class="import-upload-area" onclick="document.getElementById('bulk-input').click()">
+    <span style="font-size:2rem">📂</span>
+    <p>點擊上傳 .xlsx / .xls / .csv 或 .json 檔案</p>
+  </div>
+  <input type="file" id="bulk-input" accept=".xlsx,.xls,.csv,.json" style="display:none" onchange="handleBulkImport(this)">
+  <div id="import-result"></div>
+  <div class="modal-btns" style="margin-top:14px;">
+    <button class="mbtn-c" onclick="closeImport()">關閉</button>
+    <button class="mbtn-a" id="import-confirm-btn" style="display:none" onclick="confirmBulkImport()">✅ 確認匯入</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ 喵管家確認 MODAL ══ -->
+<div class="overlay" id="cat-confirm-overlay">
+<div class="cat-confirm">
+  <div class="cat-confirm-icon" id="cc-icon">🐈</div>
+  <div class="cat-confirm-title" id="cc-title">喵管家確認</div>
+  <div class="cat-confirm-msg" id="cc-msg">確定要這樣做嗎？</div>
+  <div class="cat-confirm-btns">
+    <button class="mbtn-c" onclick="ccCancel()">取消</button>
+    <button id="cc-ok" class="mbtn-a" onclick="ccConfirm()">確定</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ SETTINGS DRAWER ══ -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    <h3>⚙️ 喵管家設定</h3>
+    <p>資料管理與備份</p>
+  </div>
+  <div class="drawer-body">
+    <div class="dsec">📥 批量匯入</div>
+    <button class="dbtn dbtn-xl" onclick="openImport();closeDrawer()">
+      <span class="di">📊</span><div class="dt"><strong>Excel / CSV 批量匯入</strong><span>一次匯入多件衣物</span></div>
+    </button>
+    <button class="dbtn dbtn-imp" onclick="triggerImport();closeDrawer()">
+      <span class="di">📥</span><div class="dt"><strong>匯入 JSON 備份</strong><span>從備份檔還原衣櫃資料</span></div>
+    </button>
+    <input type="file" id="import-input" accept=".json" style="display:none" onchange="importJSON(this)">
+    <div class="dsec">📤 資料備份</div>
+    <button class="dbtn dbtn-json" onclick="exportJSON();closeDrawer()">
+      <span class="di">🐾</span><div class="dt"><strong>匯出 JSON 備份</strong><span>完整備份，可再匯入還原</span></div>
+    </button>
+    <button class="dbtn dbtn-csv" onclick="exportCSV();closeDrawer()">
+      <span class="di">📊</span><div class="dt"><strong>匯出 CSV 表格</strong><span>用 Excel 開啟查看</span></div>
+    </button>
+    <div class="dsec">⚠️ 危險操作</div>
+    <button class="dbtn dbtn-rst" onclick="resetAllConfirm()">
+      <span class="di">🗑️</span><div class="dt"><strong>清空所有資料</strong><span>本喵無法救回，請三思！</span></div>
+    </button>
+  </div>
+</div>
+
+<!-- ══ SUCCESS OVERLAY ══ -->
+<div class="success-overlay" id="success-overlay">
+  <div style="position:relative;display:inline-block;">
+    <div class="success-paw">🐾</div>
+    <div class="success-check">✅</div>
+  </div>
+  <div class="success-txt" id="success-txt">喵！本喵幫你收好了！</div>
+</div>
+
+<!-- ══ MIAO TOAST ══ -->
+<div class="miao-toast" id="miao-toast">
+  <div class="tcat" id="toast-cat">🐈</div>
+  <div>
+    <div class="tlbl">🐾 喵管家說</div>
+    <div class="tmsg" id="toast-msg">喵！</div>
+    <div class="tbar" id="toast-bar"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// CONSTANTS & DEFAULTS
+// ═══════════════════════════════════════
+const KEY_C='xiaodu-clothes-v4', KEY_Z='xiaodu-zones-v4';
+
+const DEFAULT_ZONES=[
+  {id:'z1',icon:'👗',name:'吊掛區-左',desc:'上衣・雪紡・襯衫（較短）',badge:'',miao:'喵：衣服按長短分，下方才有空間給本喵睡覺 🐾'},
+  {id:'z2',icon:'👘',name:'吊掛區-右',desc:'洋裝・連身衣・外套（較長）',badge:'',miao:'喵：長版衣物放右側，更好找！'},
+  {id:'z3',icon:'1️⃣',name:'網籃①',desc:'包屁衣・薄睡衣',badge:'直立折疊，一眼看完',miao:'喵：直立折疊！本喵說三遍 🐾'},
+  {id:'z4',icon:'2️⃣',name:'網籃②',desc:'所有褲子',badge:'長褲左・短褲右',miao:'喵：褲子長短分兩邊，本喵教你 🐾'},
+  {id:'z5',icon:'3️⃣',name:'網籃③',desc:'褲襪・左側盒放配件',badge:'髮帶、配件',miao:'喵：配件小，容易踩，本喵的肉墊很敏感喵嗚'},
+  {id:'z6',icon:'🧸',name:'收納箱-過季',desc:'過季衣物',badge:'貼標籤，換季才開箱',miao:'喵：過季衣物記得貼標籤 📦'},
+  {id:'z7',icon:'🔮',name:'收納箱-未來',desc:'未來才穿的衣物',badge:'',miao:'喵：小嘟長大才能穿，本喵先保管 🐾'},
+  {id:'z8',icon:'🛁',name:'最底層',desc:'毛毯・浴巾・紗布巾',badge:'用大布袋打包',miao:''},
+];
+
+const MIAO_TIPS={
+  '過季':['喵：換季時本喵會提醒你打開看看 📦','喵：過季衣物記得貼標籤，本喵眼花 🐾'],
+  '吊掛':['喵：吊掛區按長短排，下方空間才夠本喵睡覺！','喵：吊掛區衣服太擠可以送一些出去喵嗚'],
+  '網籃':['喵：直立折疊！一拉就能看到全部 🐾','喵：網籃裡的衣服直立放，本喵最喜歡整齊了'],
+  '收納箱':['喵：收納箱要貼標籤，本喵才不會打錯地方 📦'],
+  '配件':['喵：配件用小盒子分類，本喵覺得很重要 🎀'],
+};
+
+const CAT_E={'👕 上衣':'👕','👗 洋裝/連身':'👗','👖 褲子':'👖','🌸 雪紡/襯衫':'🌸',
+  '🧥 外套':'🧥','👶 包屁衣':'👶','😴 睡衣':'😴','🧦 褲襪/襪子':'🧦','🎀 配件':'🎀','🛁 浴巾/毛毯':'🛁'};
+const SCLS={'當季':'s-cur','未來':'s-fut','恩典牌':'s-grc','穿不下':'s-old','轉送':'s-don'};
+const SLB={'當季':'✅ 當季','未來':'📦 未來','恩典牌':'🎁 恩典牌','穿不下':'🚫 穿不下','轉送':'🌈 轉送'};
+const COL_MAP={
+  '名稱':'name','衣物名稱':'name','類型':'cat','分類':'cat',
+  '尺碼':'size','尺寸':'size','季節':'season','厚度':'sleeve','袖長':'sleeve',
+  '顏色':'color','狀態':'status','來源':'source','誰給的':'sourceWho',
+  '品牌':'brand','價格':'price','位置':'location','擺放位置':'location',
+  '備註':'note','備注':'note'
+};
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let clothes=[], zones=[];
+let fStatus='all', fCat='all', fZone='all';
+let selSrcV='', selLocV='', selSlvV='', selectedSize='';
+let selectedSeasons=new Set();
+let photoData='', editingId=null, viewingId=null;
+let batchMode=false, selectedIds=new Set();
+let toastTimer=null, editingZoneId=null;
+let viewMode='grid'; // 'grid' | 'list'
+let pendingBulkData=[];
+let ccCallback=null;
+
+// ═══════════════════════════════════════
+// TOAST MESSAGES
+// ═══════════════════════════════════════
+const ADD_MSGS=[
+  {c:'🐈',m:'喵！肉墊已蓋章，美衣收好囉 🐾'},
+  {c:'😸',m:'這件衣服好漂亮，本喵已幫你叼進衣櫃了喵～'},
+  {c:'🐱',m:'踩踩踩！衣服乖乖躺進去了，喵！'},
+  {c:'😺',m:'本喵用肉墊確認過，存檔成功 🐾'},
+  {c:'🙀',m:'哇！又多一件漂亮的！衣櫃越來越豐盛了喵～'},
+  {c:'😻',m:'小嘟穿這件一定超可愛，本喵核准 🐾'},
+];
+const LOC_MSGS={
+  '網籃①':{c:'1️⃣',m:'喵！已把美衣叼進網籃①，直立放好 🐾'},
+  '網籃②':{c:'2️⃣',m:'嗖～放進網籃②了！本喵爪子很靈活，喵！'},
+  '網籃③':{c:'3️⃣',m:'網籃③收到新成員，本喵已踩踩確認 🐾'},
+  '吊掛區-左':{c:'👗',m:'喵！掛上左側衣桿，整理整齊囉！'},
+  '吊掛區-右':{c:'👘',m:'右側衣桿新增美衣！本喵覺得很好看～'},
+  '收納箱-過季':{c:'📦',m:'過季衣物安全入箱，換季再叼出來！'},
+  '收納箱-未來':{c:'🔮',m:'放進未來收納箱！等小嘟長大就能穿了！'},
+};
+const PHOTO_MSG={c:'📸',m:'照片存好了喵！找衣服更方便 🐾'};
+const EDIT_MSG={c:'✏️',m:'喵！改好了，本喵仔細確認過喵嗚～'};
+
+function getMiaoMsg(item,isEdit){
+  if(isEdit)return EDIT_MSG;
+  if(item.photo&&Math.random()<.3)return PHOTO_MSG;
+  const lk=Object.keys(LOC_MSGS).find(k=>item.location&&item.location.includes(k));
+  if(lk&&Math.random()<.5)return LOC_MSGS[lk];
+  return ADD_MSGS[Math.floor(Math.random()*ADD_MSGS.length)];
+}
+
+function showToast(msg,cat='🐈',dur=2800){
+  document.getElementById('toast-cat').textContent=cat;
+  document.getElementById('toast-msg').textContent=msg;
+  const bar=document.getElementById('toast-bar'),t=document.getElementById('miao-toast');
+  bar.style.animation='none';bar.offsetHeight;
+  bar.style.animation=`shrink ${dur}ms linear forwards`;
+  t.classList.remove('hide');t.classList.add('show');
+  if(toastTimer)clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{t.classList.remove('show');t.classList.add('hide');},dur);
+}
+
+// ═══════════════════════════════════════
+// CAT CONFIRM MODAL (replaces browser confirm)
+// ═══════════════════════════════════════
+function catConfirm({icon='🐈',title='喵管家確認',msg,okText='確定',okDanger=false,onOk}){
+  document.getElementById('cc-icon').textContent=icon;
+  document.getElementById('cc-title').textContent=title;
+  document.getElementById('cc-msg').textContent=msg;
+  const okBtn=document.getElementById('cc-ok');
+  okBtn.textContent=okText;
+  okBtn.className=okDanger?'mbtn-danger':'mbtn-a';
+  ccCallback=onOk;
+  document.getElementById('cat-confirm-overlay').classList.add('show');
+}
+function ccConfirm(){document.getElementById('cat-confirm-overlay').classList.remove('show');if(ccCallback)ccCallback();ccCallback=null;}
+function ccCancel(){document.getElementById('cat-confirm-overlay').classList.remove('show');ccCallback=null;}
+
+// ═══════════════════════════════════════
+// SUCCESS OVERLAY
+// ═══════════════════════════════════════
+function showSuccess(txt='喵！本喵幫你收好了！'){
+  const o=document.getElementById('success-overlay');
+  document.getElementById('success-txt').textContent=txt;
+  o.classList.add('show');
+  setTimeout(()=>o.classList.remove('show'),1400);
+}
+
+// ═══════════════════════════════════════
+// PERSIST
+// ═══════════════════════════════════════
+function loadAll(){
+  try{clothes=JSON.parse(localStorage.getItem(KEY_C)||'[]');}catch{clothes=[];}
+  try{const z=localStorage.getItem(KEY_Z);zones=z?JSON.parse(z):[...DEFAULT_ZONES];}catch{zones=[...DEFAULT_ZONES];}
+}
+function saveClothes(){localStorage.setItem(KEY_C,JSON.stringify(clothes));wardPush();}
+function saveZones(){localStorage.setItem(KEY_Z,JSON.stringify(zones));wardPush();}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ═══════════════════════════════════════
+// VIEWS
+// ═══════════════════════════════════════
+function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function enterApp(){showView('view-home');render();localStorage.setItem('miao-v','1');}
+function goHome(){showView('view-home');render();}
+function goZone(){showView('view-zone');renderZones();}
+function goAdd(){resetForm();buildLocChips();editingId=null;document.getElementById('add-title').textContent='🐾 新增新衣服';showView('view-add');}
+function setHomeNav(el){document.querySelectorAll('#view-home .nbtn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+
+// ═══════════════════════════════════════
+// VIEW MODE TOGGLE
+// ═══════════════════════════════════════
+function toggleView(){
+  viewMode=viewMode==='grid'?'list':'grid';
+  document.getElementById('btn-view').textContent=viewMode==='grid'?'⊞':'☰';
+  render();
+}
+
+// ═══════════════════════════════════════
+// RENDER CLOTHES
+// ═══════════════════════════════════════
+function getFiltered(){
+  let list=clothes;
+  if(fStatus!=='all')list=list.filter(c=>c.status===fStatus);
+  if(fCat!=='all')   list=list.filter(c=>c.cat===fCat);
+  if(fZone!=='all')  list=list.filter(c=>c.location&&c.location.includes(fZone));
+  return list;
+}
+
+function render(){
+  const list=getFiltered();
+  const container=document.getElementById('grid');
+
+  if(!list.length){
+    container.className='grid';
+    container.innerHTML=`<div class="empty-state">
+      <div class="empty-cat">🐈</div>
+      <div class="empty-msg">喵嗚？這裡空空的<br>適合本喵進去睡午覺<br>（快去新增衣服吧！🐾）</div>
+      <button class="empty-btn" onclick="goAdd()">＋ 開始新增第一件衣服</button>
+    </div>`;
+  } else if(viewMode==='grid'){
+    container.className='grid';
+    container.innerHTML=list.map(c=>gridCard(c)).join('');
+  } else {
+    container.className='list-view';
+    container.innerHTML=list.map(c=>listCard(c)).join('');
+  }
+
+  if(batchMode) container.classList.add('batch-mode');
+  renderStats();
+  document.getElementById('header-sub').textContent=`共 ${clothes.length} 件衣物 🐾`;
+}
+
+function gridCard(c){
+  const em=CAT_E[c.cat]||'👗';
+  const imgH=c.photo
+    ?`<div class="ccard-img"><img src="${c.photo}" loading="lazy"><div class="cbadge"><span class="status-pill ${SCLS[c.status]||'s-grc'}">${SLB[c.status]||c.status}</span></div></div>`
+    :`<div class="ccard-img">${em}<div class="cbadge"><span class="status-pill ${SCLS[c.status]||'s-grc'}">${SLB[c.status]||c.status}</span></div></div>`;
+  const sel=selectedIds.has(c.id);
+  const sznTxt=[c.size,c.sleeve].filter(Boolean).join(' · ');
+  return `<div class="ccard${sel?' selected':''}" onclick="cardClick('${c.id}')">
+    <div class="ccard-ck">✓</div>${imgH}
+    <div class="ccard-body">
+      <div class="ccard-name">${esc(c.name)}</div>
+      <div class="ccard-tags">
+        ${sznTxt?`<span class="ctag">📏 ${esc(sznTxt)}</span>`:''}
+        ${c.location?`<span class="ctag ctag-mint">📍 ${esc(c.location)}</span>`:''}
+        ${c.season?`<span class="ctag">${esc(c.season)}</span>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function listCard(c){
+  const em=CAT_E[c.cat]||'👗';
+  const thumbH=c.photo?`<img src="${c.photo}">`:em;
+  const sel=selectedIds.has(c.id);
+  return `<div class="lcard${sel?' selected':''}" onclick="cardClick('${c.id}')">
+    <div class="lcard-ck">✓</div>
+    <div class="lcard-thumb">${thumbH}</div>
+    <div class="lcard-info">
+      <div class="lcard-name">${esc(c.name)}</div>
+      <div class="lcard-meta">${[c.size,c.season,c.sleeve].filter(Boolean).join(' · ')}</div>
+      ${c.location?`<div class="lcard-meta">📍 ${esc(c.location)}</div>`:''}
+    </div>
+    <div class="lcard-right">
+      <span class="status-pill ${SCLS[c.status]||'s-grc'}">${SLB[c.status]||c.status}</span>
+    </div>
+  </div>`;
+}
+
+function renderStats(){
+  const t=clothes.length,c=clothes.filter(x=>x.status==='當季').length,
+    f=clothes.filter(x=>x.status==='未來').length,g=clothes.filter(x=>x.status==='恩典牌').length;
+  document.getElementById('stats-bar').innerHTML=`
+    <div class="sitem"><div class="sn" style="color:#d04070">${t}</div><div class="sl">總件數</div></div>
+    <div class="sitem"><div class="sn" style="color:#1a8060">${c}</div><div class="sl">當季穿</div></div>
+    <div class="sitem"><div class="sn" style="color:#1a5aaa">${f}</div><div class="sl">未來穿</div></div>
+    <div class="sitem"><div class="sn" style="color:#aa8800">${g}</div><div class="sl">恩典牌</div></div>`;
+}
+
+// ═══════════════════════════════════════
+// FILTERS
+// ═══════════════════════════════════════
+function setStatus(s,el){fStatus=s;document.querySelectorAll('.stab').forEach(x=>x.classList.remove('active'));el.classList.add('active');render();}
+function setCat(c,el){fCat=c;document.querySelectorAll('.ctab').forEach(x=>x.classList.remove('active'));el.classList.add('active');render();}
+
+function filterByZone(zoneName){
+  fZone=zoneName;fStatus='all';fCat='all';
+  document.querySelectorAll('.stab').forEach((el,i)=>{if(i===0)el.classList.add('active');else el.classList.remove('active');});
+  document.querySelectorAll('.ctab').forEach((el,i)=>{if(i===0)el.classList.add('active');else el.classList.remove('active');});
+  goHome();
+  showToast(`喵！幫你找出「${zoneName}」的所有衣服 🐾`,'🔍',2400);
+}
+
+// ═══════════════════════════════════════
+// BATCH
+// ═══════════════════════════════════════
+function toggleBatch(){
+  batchMode=!batchMode;selectedIds.clear();
+  const bar=document.getElementById('batch-bar'),btn=document.getElementById('btn-select');
+  batchMode?(bar.classList.add('show'),btn.textContent='✕ 結束'):(bar.classList.remove('show'),btn.textContent='☑️ 選取');
+  document.getElementById('batch-info').textContent='已選 0 件';
+  render();
+}
+
+function selectAll(){
+  const list=getFiltered();
+  list.forEach(c=>selectedIds.add(c.id));
+  document.getElementById('batch-info').textContent=`已選 ${selectedIds.size} 件`;
+  render();
+}
+
+function cardClick(id){
+  if(batchMode){
+    selectedIds.has(id)?selectedIds.delete(id):selectedIds.add(id);
+    document.getElementById('batch-info').textContent=`已選 ${selectedIds.size} 件`;
+    render();
+  }else openDetail(id);
+}
+
+function batchDeleteConfirm(){
+  if(!selectedIds.size){showToast('喵？沒有選任何衣服耶！','🐾');return;}
+  catConfirm({
+    icon:'😿',
+    title:'喵！刪除確認',
+    msg:`確定要刪除選取的 ${selectedIds.size} 件衣物嗎？\n本喵刪掉就叼不回來了喵嗚⋯`,
+    okText:`刪除 ${selectedIds.size} 件`,
+    okDanger:true,
+    onOk(){
+      const n=selectedIds.size;
+      clothes=clothes.filter(c=>!selectedIds.has(c.id));
+      saveClothes();showToast(`喵嗚～刪掉 ${n} 件了 🌈`,'😿');toggleBatch();
+    }
+  });
+}
+
+function openBatchStatus(){
+  if(!selectedIds.size){showToast('喵？先選衣物吧！','🐾');return;}
+  document.getElementById('bstatus-hint').textContent=`將修改已選 ${selectedIds.size} 件衣物的狀態`;
+  document.getElementById('bstatus-overlay').classList.add('show');
+}
+function closeBatchStatus(){document.getElementById('bstatus-overlay').classList.remove('show');}
+function applyBatch(status){
+  clothes=clothes.map(c=>selectedIds.has(c.id)?{...c,status,updatedAt:new Date().toLocaleDateString('zh-TW')}:c);
+  saveClothes();showToast(`喵！${selectedIds.size} 件改為「${SLB[status]}」🐾`,'😸');
+  closeBatchStatus();toggleBatch();
+}
+
+// ═══════════════════════════════════════
+// PHOTO
+// ═══════════════════════════════════════
+function handlePhoto(input){
+  const file=input.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    photoData=e.target.result;
+    const box=document.getElementById('photo-box');
+    box.innerHTML=`<img src="${photoData}"><div style="position:absolute;bottom:7px;right:8px;background:rgba(255,255,255,.9);border-radius:10px;padding:2px 9px;font-size:.57rem;font-weight:800;color:#7a2048;">換照片 📷</div>`;
+  };
+  r.readAsDataURL(file);
+}
+
+// ═══════════════════════════════════════
+// CHIP SELECTORS
+// ═══════════════════════════════════════
+function selSize(el,val){
+  document.querySelectorAll('#size-chips .chip').forEach(c=>c.classList.remove('sel-size'));
+  el.classList.add('sel-size');selectedSize=val;
+  document.getElementById('f-size').value=val;
+}
+function clearSizeChips(){document.querySelectorAll('#size-chips .chip').forEach(c=>c.classList.remove('sel-size'));selectedSize='';}
+function clearSize(){document.getElementById('f-size').value='';selectedSize='';document.querySelectorAll('#size-chips .chip').forEach(c=>c.classList.remove('sel-size'));}
+
+function selSrc(el,val){document.querySelectorAll('#src-chips .chip').forEach(c=>c.classList.remove('sel-src'));el.classList.add('sel-src');selSrcV=val;}
+function selLoc(el,val){document.querySelectorAll('#loc-chips .chip').forEach(c=>c.classList.remove('sel-loc'));el.classList.add('sel-loc');selLocV=val;document.getElementById('f-loc-custom').value='';}
+function selSlv(el,val){document.querySelectorAll('#sleeve-chips .chip').forEach(c=>c.classList.remove('sel-slv'));el.classList.add('sel-slv');selSlvV=val;}
+
+// 季節複選
+function toggleSsn(el,val){
+  if(selectedSeasons.has(val)){selectedSeasons.delete(val);el.classList.remove('sel-ssn');}
+  else{selectedSeasons.add(val);el.classList.add('sel-ssn');}
+}
+
+// ═══════════════════════════════════════
+// FORM RESET
+// ═══════════════════════════════════════
+function resetForm(){
+  photoData='';selSrcV='';selLocV='';selSlvV='';selectedSize='';selectedSeasons=new Set();
+  document.getElementById('photo-input').value='';
+  document.getElementById('photo-box').innerHTML=`<span style="font-size:1.7rem">📷</span><span class="photo-hint">點擊上傳照片</span>`;
+  ['f-name','f-color','f-price','f-brand','f-note','f-source-who','f-loc-custom','f-size'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-cat').selectedIndex=0;
+  document.getElementById('f-status').value='當季';
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel-src','sel-loc','sel-size','sel-ssn','sel-slv'));
+}
+
+// ═══════════════════════════════════════
+// SAVE
+// ═══════════════════════════════════════
+function saveItem(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){showToast('喵！衣服要有名字本喵才記得住 😿','🐱');return;}
+  const locC=document.getElementById('f-loc-custom').value.trim();
+  const isEdit=!!editingId;
+  const item={
+    id:editingId||Date.now().toString(),name,
+    cat:document.getElementById('f-cat').value,
+    size:document.getElementById('f-size').value.trim()||selectedSize,
+    season:[...selectedSeasons].join('、'),
+    sleeve:selSlvV,
+    color:document.getElementById('f-color').value.trim(),
+    status:document.getElementById('f-status').value,
+    source:selSrcV,
+    sourceWho:document.getElementById('f-source-who').value.trim(),
+    price:document.getElementById('f-price').value,
+    brand:document.getElementById('f-brand').value.trim(),
+    location:locC||selLocV,
+    note:document.getElementById('f-note').value.trim(),
+    photo:photoData,
+    updatedAt:new Date().toLocaleDateString('zh-TW'),
+  };
+  if(isEdit)clothes=clothes.map(c=>c.id===editingId?item:c);
+  else clothes.unshift(item);
+  saveClothes();
+  showSuccess(isEdit?'喵！本喵已幫你更新好了！':'喵！新衣服入庫成功 🐾');
+  setTimeout(()=>{goHome();const m=getMiaoMsg(item,isEdit);showToast(m.m,m.c,2800);},900);
+}
+
+// ═══════════════════════════════════════
+// DETAIL
+// ═══════════════════════════════════════
+function openDetail(id){
+  const c=clothes.find(x=>x.id===id);if(!c)return;
+  viewingId=id;
+  const box=document.getElementById('d-img');
+  box.style.fontSize='4rem';
+  box.innerHTML=c.photo?`<img src="${c.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:22px;">`:CAT_E[c.cat]||'👗';
+  document.getElementById('d-rows').innerHTML=[
+    ['名稱',c.name],['類型',c.cat],['📏 尺碼',c.size||'—'],
+    ['袖長',c.sleeve||'—'],['季節',c.season||'—'],['顏色',c.color||'—'],
+    ['狀態',SLB[c.status]||c.status],
+    ['來源',[c.source,c.sourceWho].filter(Boolean).join(' · ')||'—'],
+    ['品牌',c.brand||'—'],['價格',c.price?'NT$ '+c.price:'—'],
+    ['📍 位置',c.location||'—'],['更新',c.updatedAt||'—'],['備註',c.note||'—'],
+  ].map(([k,v])=>`<div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${esc(String(v))}</span></div>`).join('');
+  document.getElementById('detail-overlay').classList.add('show');
+}
+function closeDetail(){document.getElementById('detail-overlay').classList.remove('show');}
+function editCurrent(){
+  const c=clothes.find(x=>x.id===viewingId);if(!c)return;
+  closeDetail();editingId=c.id;resetForm();buildLocChips();
+  document.getElementById('add-title').textContent='✏️ 幫本喵修改一下';
+  document.getElementById('f-name').value=c.name||'';
+  document.getElementById('f-cat').value=c.cat||'👕 上衣';
+  document.getElementById('f-size').value=c.size||'';
+  document.getElementById('f-color').value=c.color||'';
+  document.getElementById('f-status').value=c.status||'當季';
+  document.getElementById('f-price').value=c.price||'';
+  document.getElementById('f-brand').value=c.brand||'';
+  document.getElementById('f-note').value=c.note||'';
+  document.getElementById('f-source-who').value=c.sourceWho||'';
+  document.getElementById('f-loc-custom').value=c.location||'';
+  photoData=c.photo||'';selSrcV=c.source||'';selLocV=c.location||'';selSlvV=c.sleeve||'';
+  // restore multi-season
+  if(c.season){c.season.split('、').forEach(s=>{selectedSeasons.add(s);document.querySelectorAll('#season-chips .chip').forEach(el=>{if(el.textContent.trim().includes(s))el.classList.add('sel-ssn');});});}
+  if(c.photo){const b=document.getElementById('photo-box');b.innerHTML=`<img src="${c.photo}"><div style="position:absolute;bottom:7px;right:8px;background:rgba(255,255,255,.9);border-radius:10px;padding:2px 9px;font-size:.57rem;font-weight:800;color:#7a2048;">換照片 📷</div>`;}
+  document.querySelectorAll('#src-chips .chip').forEach(el=>{if(el.textContent.includes(c.source||'__'))el.classList.add('sel-src');});
+  document.querySelectorAll('#sleeve-chips .chip').forEach(el=>{if(el.textContent.trim()===c.sleeve)el.classList.add('sel-slv');});
+  document.querySelectorAll('#size-chips .chip').forEach(el=>{if(el.textContent.trim()===c.size){el.classList.add('sel-size');selectedSize=c.size;}});
+  showView('view-add');
+}
+
+// ═══════════════════════════════════════
+// ZONE MANAGEMENT
+// ═══════════════════════════════════════
+function getZoneMiao(z){
+  const n=(z.name+' '+(z.desc||'')).toLowerCase();
+  for(const[kw,msgs]of Object.entries(MIAO_TIPS)){
+    if(n.includes(kw))return msgs[Math.floor(Math.random()*msgs.length)];
+  }
+  return z.miao||'';
+}
+
+function renderZones(){
+  document.getElementById('zone-count').textContent=zones.length;
+  document.getElementById('zone-list').innerHTML=zones.map(z=>{
+    const cnt=clothes.filter(c=>c.location&&c.location.includes(z.name)).length;
+    const miao=getZoneMiao(z);
+    return `<div class="zcard" id="zcard-${z.id}">
+      <div class="zcard-top" onclick="filterByZone('${esc(z.name)}')">
+        <div class="zicon">${z.icon||'📦'}</div>
+        <div class="zinfo">
+          <div class="zcard-name">${esc(z.name)}<span class="zcnt">${cnt} 件</span></div>
+          <div class="zdesc">${esc(z.desc||'')}</div>
+          ${z.badge?`<div class="zbadge">${esc(z.badge)}</div>`:''}
+        </div>
+      </div>
+      ${miao?`<div class="zmiao show">🐾 ${esc(miao)}</div>`:''}
+      <div class="zcard-actions">
+        <button class="zact-btn zact-filter" onclick="filterByZone('${esc(z.name)}')">🔍 篩選衣服</button>
+        <button class="zact-btn zact-edit" onclick="openZoneEdit('${z.id}')">✏️ 編輯</button>
+        <button class="zact-btn zact-del" onclick="deleteZoneConfirm('${z.id}')">🗑 刪除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildLocChips(){
+  const container=document.getElementById('loc-chips');
+  if(!container)return;
+  container.innerHTML=zones.map(z=>`<div class="chip" onclick="selLoc(this,'${z.name}')">${z.icon} ${z.name}</div>`).join('');
+  if(selLocV){container.querySelectorAll('.chip').forEach(el=>{if(el.textContent.trim().includes(selLocV))el.classList.add('sel-loc');});}
+}
+
+function openZoneEdit(id){
+  editingZoneId=id;
+  const z=id?zones.find(x=>x.id===id):null;
+  document.getElementById('zedit-title').textContent=z?'✏️ 編輯分區':'🐾 新增分區';
+  document.getElementById('ze-icon').value=z?z.icon:'📦';
+  document.getElementById('ze-name').value=z?z.name:'';
+  document.getElementById('ze-desc').value=z?z.desc:'';
+  document.getElementById('ze-badge').value=z?z.badge:'';
+  document.getElementById('zone-edit-overlay').classList.add('show');
+}
+function closeZoneEdit(){document.getElementById('zone-edit-overlay').classList.remove('show');}
+
+function previewSaveZone(){
+  const name=document.getElementById('ze-name').value.trim();
+  if(!name){showToast('喵！分區名稱不能空白啦 😿','🐱');return;}
+  const isNew=!editingZoneId;
+  closeZoneEdit();
+  catConfirm({
+    icon:isNew?'😸':'✏️',
+    title:isNew?'喵！確認新增分區':'喵！確認修改分區',
+    msg:isNew?`確定要新增「${name}」分區嗎？\n本喵會幫你記住的 🐾`:`確定要將分區改為「${name}」嗎？`,
+    okText:isNew?'確定新增':'確定修改',
+    okDanger:false,
+    onOk(){
+      const z={
+        id:editingZoneId||'z'+Date.now(),
+        icon:document.getElementById('ze-icon').value.trim()||'📦',
+        name,
+        desc:document.getElementById('ze-desc').value.trim(),
+        badge:document.getElementById('ze-badge').value.trim(),
+        miao:'',
+      };
+      if(editingZoneId)zones=zones.map(x=>x.id===editingZoneId?z:x);
+      else zones.push(z);
+      saveZones();renderZones();buildLocChips();
+      showToast(editingZoneId?`喵！「${name}」分區已更新 🐾`:`喵！新分區「${name}」建立好了 🐾`,'😸');
+    }
+  });
+}
+
+function deleteZoneConfirm(id){
+  const z=zones.find(x=>x.id===id);if(!z)return;
+  catConfirm({
+    icon:'😿',
+    title:'喵！刪除分區確認',
+    msg:`確定要刪除「${z.name}」分區嗎？\n（衣服資料不受影響，只是分區消失）\n本喵捨不得喵嗚⋯`,
+    okText:'確定刪除',
+    okDanger:true,
+    onOk(){
+      zones=zones.filter(x=>x.id!==id);
+      saveZones();renderZones();buildLocChips();
+      showToast('喵嗚！分區刪掉了，本喵有點難過 😿','😿');
+    }
+  });
+}
+
+// ═══════════════════════════════════════
+// DRAWER
+// ═══════════════════════════════════════
+function openDrawer(){document.getElementById('drawer-overlay').classList.add('show');document.getElementById('drawer').classList.add('open');}
+function closeDrawer(){document.getElementById('drawer-overlay').classList.remove('show');document.getElementById('drawer').classList.remove('open');}
+
+// ═══════════════════════════════════════
+// 📥 BULK IMPORT (Excel / CSV / JSON)
+// ═══════════════════════════════════════
+function openImport(){document.getElementById('import-overlay').classList.add('show');document.getElementById('import-result').innerHTML='';document.getElementById('import-confirm-btn').style.display='none';pendingBulkData=[];}
+function closeImport(){document.getElementById('import-overlay').classList.remove('show');}
+
+function downloadTemplate(){
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([
+    ['名稱','類型','尺碼','季節','厚度/袖長','顏色','狀態','位置','來源','誰給的','品牌','價格','備註'],
+    ['草莓洋裝','👗 洋裝/連身','80','春季、夏季','短袖','粉紅','當季','吊掛區-左','自購','','','450',''],
+    ['藍色包屁衣','👶 包屁衣','80','四季','短袖','藍色','當季','網籃①','恩典牌','阿姨','','',''],
+  ]);
+  ws['!cols']=[{wch:16},{wch:14},{wch:8},{wch:16},{wch:10},{wch:8},{wch:10},{wch:14},{wch:8},{wch:10},{wch:10},{wch:8},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,ws,'小嘟衣物');
+  XLSX.writeFile(wb,'小嘟衣物匯入範本.xlsx');
+  showToast('喵！範本下載好了，填完再上傳 🐾','📊');
+}
+
+function handleBulkImport(input){
+  const file=input.files[0];if(!file)return;
+  const ext=file.name.split('.').pop().toLowerCase();
+  const resultEl=document.getElementById('import-result');
+  resultEl.innerHTML='';
+  document.getElementById('import-confirm-btn').style.display='none';
+  pendingBulkData=[];
+
+  if(ext==='json'){
+    const r=new FileReader();
+    r.onload=e=>{
+      try{
+        const d=JSON.parse(e.target.result);
+        const rows=Array.isArray(d)?d:(d.clothes||[]);
+        if(!rows.length)throw new Error('empty');
+        pendingBulkData=rows.map(row=>({...row,id:Date.now()+Math.random()+''}));
+        showBulkPreview(pendingBulkData,'JSON');
+      }catch{resultEl.innerHTML=`<div class="import-result err">😿 喵嗚！JSON 格式不對，本喵看不懂</div>`;}
+    };
+    r.readAsText(file,'utf-8');
+    return;
+  }
+
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      if(rows.length<2)throw new Error('no data');
+      const headers=rows[0].map(h=>String(h).trim());
+      const data=rows.slice(1).filter(r=>r.some(v=>String(v).trim()!==''));
+      pendingBulkData=data.map(row=>{
+        const obj={id:Date.now()+Math.random()+'',status:'恩典牌',updatedAt:new Date().toLocaleDateString('zh-TW')};
+        headers.forEach((h,i)=>{
+          const key=COL_MAP[h]||COL_MAP[h.replace(/[（）()\s]/g,'')];
+          if(key&&row[i]!==undefined&&row[i]!=='')obj[key]=String(row[i]).trim();
+        });
+        if(!obj.name)return null;
+        return obj;
+      }).filter(Boolean);
+      if(!pendingBulkData.length)throw new Error('no valid rows');
+      showBulkPreview(pendingBulkData,ext.toUpperCase());
+    }catch(err){
+      resultEl.innerHTML=`<div class="import-result err">😿 喵嗚！檔案格式有問題，本喵讀不到資料<br><small>（${err.message}）</small></div>`;
+    }
+  };
+  r.readAsBinaryString(file);
+}
+
+function showBulkPreview(data,type){
+  const resultEl=document.getElementById('import-result');
+  const preview=data.slice(0,5).map(c=>`<tr><td>${esc(c.name||'')}</td><td>${esc(c.size||'')}</td><td>${esc(c.season||'')}</td><td>${esc(c.status||'')}</td><td>${esc(c.location||'')}</td></tr>`).join('');
+  resultEl.innerHTML=`<div class="import-result ok">🐾 喵！讀到 ${data.length} 件衣物（${type}），確認後本喵幫你全部叼進來！</div>
+    <div class="import-preview"><table><tr><th>名稱</th><th>尺碼</th><th>季節</th><th>狀態</th><th>位置</th></tr>${preview}${data.length>5?`<tr><td colspan="5" style="text-align:center;color:var(--sub)">⋯還有 ${data.length-5} 件</td></tr>`:''}</table></div>`;
+  document.getElementById('import-confirm-btn').style.display='flex';
+}
+
+function confirmBulkImport(){
+  if(!pendingBulkData.length)return;
+  catConfirm({
+    icon:'😸',
+    title:'喵！確認批量匯入',
+    msg:`確定要匯入 ${pendingBulkData.length} 件衣物嗎？\n會新增在現有衣物的最前面，原有資料不受影響 🐾`,
+    okText:`確定匯入 ${pendingBulkData.length} 件`,
+    okDanger:false,
+    onOk(){
+      clothes=[...pendingBulkData,...clothes];
+      saveClothes();closeImport();render();
+      showSuccess(`喵！${pendingBulkData.length} 件衣物全部叼進來了 🐾`);
+      showToast(`喵！批量匯入成功！共 ${pendingBulkData.length} 件衣物 🐾`,'😸',3200);
+      pendingBulkData=[];
+    }
+  });
+}
+
+// ═══════════════════════════════════════
+// JSON IMPORT / EXPORT / CSV / RESET
+// ═══════════════════════════════════════
+function exportJSON(){
+  if(!clothes.length){showToast('喵？衣櫃空空的，沒有資料可以備份！','😿');return;}
+  const data={version:4,exportedAt:new Date().toISOString(),clothes,zones};
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  a.download=`小嘟衣櫃備份_${new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')}.json`;
+  a.click();
+  showToast(`喵！${clothes.length} 件衣物備份完成 🐾`,'😸');
+}
+function triggerImport(){document.getElementById('import-input').value='';document.getElementById('import-input').click();}
+function importJSON(input){
+  const file=input.files[0];if(!file)return;
+  catConfirm({
+    icon:'🙀',title:'喵！匯入確認',
+    msg:'要蓋掉現在的衣櫃資料嗎？\n這動作很嚴肅喔（喵嗚～）',
+    okText:'確定蓋掉',okDanger:true,
+    onOk(){
+      const r=new FileReader();
+      r.onload=e=>{
+        try{
+          const d=JSON.parse(e.target.result);
+          const imp=Array.isArray(d)?d:(d.clothes||[]);
+          if(!imp.length)throw new Error('empty');
+          clothes=imp;
+          if(d.zones&&d.zones.length)zones=d.zones;
+          saveClothes();saveZones();render();
+          showToast(`喵！全數叼回！${clothes.length} 件衣物復原成功 🐾`,'😻',3200);
+        }catch{showToast('喵嗚！檔案格式不對，本喵看不懂 😿','😿');}
+      };
+      r.readAsText(file,'utf-8');
+    }
+  });
+}
+function exportCSV(){
+  if(!clothes.length){showToast('喵？衣櫃空空的！','😿');return;}
+  const h=['名稱','類型','尺碼','袖長','季節','顏色','狀態','來源','誰給的','品牌','價格','位置','備註','更新日期'];
+  const rows=clothes.map(c=>[c.name,c.cat,c.size||'',c.sleeve||'',c.season||'',c.color||'',c.status,c.source||'',c.sourceWho||'',c.brand||'',c.price||'',c.location||'',c.note||'',c.updatedAt||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent('\uFEFF'+[h.join(','),...rows].join('\n'));
+  a.download=`小嘟衣物表格_${new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')}.csv`;
+  a.click();
+  showToast('📊 CSV 匯出完成 🐾','😸');
+}
+function resetAllConfirm(){
+  catConfirm({
+    icon:'😿',title:'喵嗚！！超級嚴肅警告',
+    msg:'這會刪除所有衣物資料！\n本喵叼不回來的喵嗚嗚⋯⋯\n真的真的確定嗎？？',
+    okText:'我確定，全部刪除',okDanger:true,
+    onOk(){
+      clothes=[];zones=[...DEFAULT_ZONES];saveClothes();saveZones();render();closeDrawer();
+      showToast('喵嗚⋯衣櫃清空了，本喵要哭了 😢','😿');
+    }
+  });
+}
+
+// ═══════════════════════════════════════
+// FIREBASE SYNC
+// ═══════════════════════════════════════
+var wardRoomCode = '';
+var wardSaveTimer = null;
+var wardLastPushed = 0;
+var wardUnsub = null;
+
+function wardLogin(){
+  var v = document.getElementById('wardRoomInput').value.trim().toLowerCase().replace(/\s+/g,'');
+  var err = document.getElementById('wardLoginErr');
+  if(!v||v.length<2){ err.textContent='代號至少 2 個字元喵！'; return; }
+  err.textContent='';
+  wardRoomCode = v;
+  localStorage.setItem('ward_last_room', v);
+  loadAll();
+  enterApp();
+  wardStartSync();
+}
+window.wardLogin = wardLogin;
+
+function wardSetSyncDot(s){
+  var dot = document.getElementById('ward-sync-dot');
+  if(!dot) return;
+  dot.style.background = s==='on'?'#7ecfae':s==='err'?'#f4849c':'#f9c4d2';
+}
+
+function wardPush(){
+  if(!wardRoomCode||!window._wardFbSet) return;
+  clearTimeout(wardSaveTimer);
+  wardSaveTimer = setTimeout(function(){
+    wardLastPushed = Date.now();
+    window._wardFbSet(wardRoomCode, {clothes:clothes, zones:zones, updatedAt:Date.now()}).catch(function(){});
+  }, 800);
+}
+
+function wardApplyRemote(data){
+  if(data.updatedAt && data.updatedAt <= wardLastPushed) return;
+  if(data.clothes) clothes = data.clothes;
+  if(data.zones)   zones   = data.zones;
+  saveClothes(); saveZones();
+  render();
+  wardSetSyncDot('on');
+}
+
+function wardStartSync(){
+  if(wardUnsub){ wardUnsub(); wardUnsub=null; }
+  if(!window._wardFbGet) return;
+  wardSetSyncDot('off');
+  window._wardFbGet(wardRoomCode).then(function(snap){
+    if(snap.exists()) wardApplyRemote(snap.data());
+    else { if(clothes.length>0) wardPush(); }
+    wardSetSyncDot('on');
+  }).catch(function(){ wardSetSyncDot('err'); });
+  wardUnsub = window._wardFbListen(wardRoomCode, function(data){
+    wardApplyRemote(data);
+    wardSetSyncDot('on');
+    showToast('喵！家人剛剛更新了衣櫃資料，已同步囉 🐾','✨');
+  });
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+loadAll();
+var savedWardRoom = localStorage.getItem('ward_last_room');
+if(savedWardRoom){
+  wardRoomCode = savedWardRoom;
+  document.getElementById('wardRoomInput').value = savedWardRoom;
+  enterApp();
+  if(window._wardFbReady) wardStartSync();
+  else window._wardOnFbReady = function(){ wardStartSync(); };
+} else if(clothes.length>0||localStorage.getItem('miao-v')){
+  localStorage.setItem('miao-v','1');
+  enterApp();
+}
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+const app = initializeApp({
+  apiKey:"AIzaSyAy0QKDrORa_VSecvEbeUxjMkRU4jd-QEM",
+  authDomain:"five-year-diary-d7e00.firebaseapp.com",
+  projectId:"five-year-diary-d7e00",
+  storageBucket:"five-year-diary-d7e00.firebasestorage.app",
+  messagingSenderId:"298457239349",
+  appId:"1:298457239349:web:9183353d8ad790076c867c"
+});
+const db = getFirestore(app);
+window._wardFbGet    = c => getDoc(doc(db,'wardrobe_v1',c));
+window._wardFbSet    = (c,d) => setDoc(doc(db,'wardrobe_v1',c),d);
+window._wardFbListen = (c,cb) => onSnapshot(doc(db,'wardrobe_v1',c), s => { if(s.exists()) cb(s.data()); });
+window._wardFbReady  = true;
+if(window._wardOnFbReady) window._wardOnFbReady();
+</script>
+</body>
+</html>
