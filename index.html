@@ -1483,10 +1483,13 @@ function wardStartSync(){
 // INIT
 // ═══════════════════════════════════════
 loadAll();
+var urlWardCode = new URLSearchParams(window.location.search).get('code');
 var savedWardRoom = localStorage.getItem('ward_last_room');
-if(savedWardRoom){
-  wardRoomCode = savedWardRoom;
-  document.getElementById('wardRoomInput').value = savedWardRoom;
+var autoWardRoom = urlWardCode || savedWardRoom;
+if(autoWardRoom){
+  wardRoomCode = autoWardRoom;
+  localStorage.setItem('ward_last_room', autoWardRoom);
+  document.getElementById('wardRoomInput').value = autoWardRoom;
   enterApp();
   if(window._wardFbReady) wardStartSync();
   else window._wardOnFbReady = function(){ wardStartSync(); };
