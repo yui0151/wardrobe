@@ -1443,8 +1443,10 @@ function resetAllConfirm(){
 // ═══════════════════════════════════════
 var wardRoomCode = '';
 var wardSaveTimer = null;
-var wardLastPushed = 0;
 var wardUnsub = null;
+// 每個 session 產生唯一 token，推送時帶上，收到自己的 snapshot 就靜默
+var wardSessionToken = Math.random().toString(36).slice(2);
+var wardPendingToken = null; // 最後一次推送帶的 token
 
 function wardLogin(){
   var v = document.getElementById('wardRoomInput').value.trim().toLowerCase().replace(/\s+/g,'');
@@ -1469,38 +1471,45 @@ function wardPush(){
   if(!wardRoomCode||!window._wardFbSet) return;
   clearTimeout(wardSaveTimer);
   wardSaveTimer = setTimeout(function(){
-    wardLastPushed = Date.now();
-    window._wardFbSet(wardRoomCode, {clothes:clothes, zones:zones, updatedAt:Date.now()}).catch(function(){});
+    wardPendingToken = wardSessionToken; // 記住這次推送的 token
+    window._wardFbSet(wardRoomCode, {
+      clothes:clothes, zones:zones,
+      updatedAt:Date.now(),
+      senderToken: wardSessionToken  // 寫進 Firestore
+    }).catch(function(){});
   }, 800);
 }
 
-function wardApplyRemote(data){
-  if(data.updatedAt && data.updatedAt <= wardLastPushed) return;
+function wardApplyRemote(data, showNotif){
+  // 套用遠端資料（不呼叫 saveClothes/saveZones 避免觸發再次 push）
   if(data.clothes) clothes = data.clothes;
   if(data.zones)   zones   = data.zones;
-  saveClothes(); saveZones();
+  localStorage.setItem(KEY_C, JSON.stringify(clothes));
+  localStorage.setItem(KEY_Z, JSON.stringify(zones));
   render();
   wardSetSyncDot('on');
+  if(showNotif) showToast('喵！家人剛剛更新了衣櫃資料，已同步囉 🐾','✨');
 }
 
 function wardStartSync(){
   if(wardUnsub){ wardUnsub(); wardUnsub=null; }
   if(!window._wardFbGet) return;
   wardSetSyncDot('off');
-  var isFirstSnapshot = true;
+  // 初始拉取（不 toast）
   window._wardFbGet(wardRoomCode).then(function(snap){
-    if(snap.exists()) wardApplyRemote(snap.data());
+    if(snap.exists()) wardApplyRemote(snap.data(), false);
     else { if(clothes.length>0) wardPush(); }
     wardSetSyncDot('on');
   }).catch(function(){ wardSetSyncDot('err'); });
+  // 即時監聽
   wardUnsub = window._wardFbListen(wardRoomCode, function(data){
-    // 第一次 snapshot 是初始載入，不顯示通知
-    if(isFirstSnapshot){ isFirstSnapshot=false; wardApplyRemote(data); wardSetSyncDot('on'); return; }
-    // 自己推送的（3秒內）不顯示通知
-    if(Date.now() - wardLastPushed < 3000){ wardSetSyncDot('on'); return; }
-    wardApplyRemote(data);
-    wardSetSyncDot('on');
-    showToast('喵！家人剛剛更新了衣櫃資料，已同步囉 🐾','✨');
+    // 是自己推送的 → 靜默
+    if(data.senderToken && data.senderToken === wardSessionToken){
+      wardSetSyncDot('on');
+      return;
+    }
+    // 真的是其他裝置 → 套用並通知
+    wardApplyRemote(data, true);
   });
 }
 
