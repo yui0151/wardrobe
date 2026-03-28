@@ -67,20 +67,13 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
 .hbtn:active{transform:scale(.94);}
 
 /* ════ STATS BAR ════ */
-.stats-bar{margin:7px 14px 0;background:#fff;border-radius:14px;
+.stats-bar{display:flex;margin:7px 14px 0;background:#fff;border-radius:14px;
   box-shadow:0 2px 10px var(--sd);overflow:hidden;flex-shrink:0;}
-.stats-top{display:flex;}
 .sitem{flex:1;display:flex;flex-direction:column;align-items:center;padding:6px 4px 7px;
   border-right:1px solid var(--bd);}
 .sitem:last-child{border-right:none;}
 .sn{font-size:1.05rem;font-weight:900;line-height:1;}
 .sl{font-size:.48rem;font-weight:800;color:var(--sub);margin-top:2px;}
-.stats-cats{display:flex;flex-wrap:wrap;gap:5px;padding:6px 10px 8px;
-  border-top:1px solid var(--bd);background:#fffaf8;}
-.cat-stat-badge{display:inline-flex;align-items:center;gap:3px;
-  background:var(--cr);border-radius:10px;padding:2px 8px;}
-.cat-stat-n{font-size:.72rem;font-weight:900;color:var(--p3);}
-.cat-stat-l{font-size:.52rem;font-weight:800;color:var(--sub);}
 
 /* ════ BATCH BAR ════ */
 .batch-bar{background:linear-gradient(135deg,#fff0f5,#fff8ee);border-bottom:1.5px solid var(--bd);
@@ -126,9 +119,9 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
   font-size:.78rem;z-index:3;box-shadow:0 2px 8px var(--sd);}
 .ccard.selected .ccard-ck{background:var(--p2);border-color:var(--p2);color:#fff;}
 .batch-mode .ccard-ck{display:flex;}
-.ccard-img{width:100%;height:160px;background:linear-gradient(135deg,#fce4ec,#fff3e0);
+.ccard-img{width:100%;height:118px;background:linear-gradient(135deg,#fce4ec,#fff3e0);
   display:flex;align-items:center;justify-content:center;font-size:2.5rem;position:relative;overflow:hidden;}
-.ccard-img img{width:100%;height:100%;object-fit:contain;background:#fafafa;}
+.ccard-img img{width:100%;height:100%;object-fit:cover;}
 .cbadge{position:absolute;bottom:7px;right:7px;z-index:2;}
 .ccard-body{padding:9px 11px 11px;}
 .ccard-name{font-size:.77rem;font-weight:900;line-height:1.3;margin-bottom:5px;}
@@ -447,22 +440,22 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
       <div class="stab active" onclick="setStatus('all',this)">🐾 全部</div>
       <div class="stab" onclick="setStatus('當季',this)">✅ 當季</div>
       <div class="stab" onclick="setStatus('未來',this)">📦 未來</div>
-      <div class="stab" onclick="setStatus('待整理',this)">🗂️ 待整理</div>
+      <div class="stab" onclick="setStatus('恩典牌',this)">🎁 恩典牌</div>
       <div class="stab" onclick="setStatus('穿不下',this)">🚫 穿不下</div>
-      <div class="stab" onclick="setStatus('已轉送',this)">🌈 已轉送</div>
+      <div class="stab" onclick="setStatus('轉送',this)">🌈 轉送</div>
     </div>
     <div class="cat-row">
       <div class="ctab active" onclick="setCat('all',this)">全部類別</div>
       <div class="ctab" onclick="setCat('👕 上衣',this)">👕 上衣</div>
       <div class="ctab" onclick="setCat('👗 洋裝/連身',this)">👗 洋裝/連身</div>
       <div class="ctab" onclick="setCat('👖 褲子',this)">👖 褲子</div>
-      <div class="ctab" onclick="setCat('👚 套裝',this)">👚 套裝</div>
       <div class="ctab" onclick="setCat('🌸 雪紡/襯衫',this)">🌸 雪紡</div>
       <div class="ctab" onclick="setCat('🧥 外套',this)">🧥 外套</div>
       <div class="ctab" onclick="setCat('👶 包屁衣',this)">👶 包屁衣</div>
       <div class="ctab" onclick="setCat('😴 睡衣',this)">😴 睡衣</div>
+      <div class="ctab" onclick="setCat('🧦 褲襪/襪子',this)">🧦 褲襪</div>
       <div class="ctab" onclick="setCat('🎀 配件',this)">🎀 配件</div>
-      <div class="ctab" onclick="setCat('📦 其他',this)">📦 其他</div>
+      <div class="ctab" onclick="setCat('🛁 浴巾/毛毯',this)">🛁 浴巾</div>
     </div>
   </div>
 
@@ -520,8 +513,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
       <div class="frow" style="margin:0"><label>類型</label>
         <select id="f-cat">
           <option>👕 上衣</option><option>👗 洋裝/連身</option><option>👖 褲子</option>
-          <option>👚 套裝</option><option>🌸 雪紡/襯衫</option><option>🧥 外套</option>
-          <option>👶 包屁衣</option><option>😴 睡衣</option><option>🎀 配件</option><option>📦 其他</option>
+          <option>🌸 雪紡/襯衫</option><option>🧥 外套</option><option>👶 包屁衣</option>
+          <option>😴 睡衣</option><option>🧦 褲襪/襪子</option><option>🎀 配件</option><option>🛁 浴巾/毛毯</option>
         </select>
       </div>
     </div>
@@ -569,7 +562,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
       <div class="frow" style="margin:0"><label>狀態</label>
         <select id="f-status">
           <option value="當季">✅ 當季穿</option><option value="未來">📦 未來才穿</option>
-          <option value="待整理">🗂️ 待整理</option><option value="穿不下">🚫 穿不下了</option><option value="已轉送">🌈 已轉送</option>
+          <option value="恩典牌">🎁 恩典牌待整理</option><option value="穿不下">🚫 穿不下了</option><option value="轉送">🌈 準備轉送</option>
         </select>
       </div>
     </div>
@@ -626,9 +619,9 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
   <div class="bstatus-grid">
     <button class="bstatus-btn" onclick="applyBatch('當季')">✅<br>當季穿</button>
     <button class="bstatus-btn" onclick="applyBatch('未來')">📦<br>未來穿</button>
-    <button class="bstatus-btn" onclick="applyBatch('待整理')">🗂️<br>待整理</button>
+    <button class="bstatus-btn" onclick="applyBatch('恩典牌')">🎁<br>恩典牌</button>
     <button class="bstatus-btn" onclick="applyBatch('穿不下')">🚫<br>穿不下</button>
-    <button class="bstatus-btn" onclick="applyBatch('已轉送')">🌈<br>已轉送</button>
+    <button class="bstatus-btn" onclick="applyBatch('轉送')">🌈<br>轉送</button>
   </div>
   <div class="modal-btns"><button class="mbtn-c" onclick="closeBatchStatus()">取消</button></div>
 </div>
@@ -770,9 +763,9 @@ const MIAO_TIPS={
 };
 
 const CAT_E={'👕 上衣':'👕','👗 洋裝/連身':'👗','👖 褲子':'👖','🌸 雪紡/襯衫':'🌸',
-  '🧥 外套':'🧥','👶 包屁衣':'👶','😴 睡衣':'😴','👚 套裝':'👚','🎀 配件':'🎀','📦 其他':'📦'};
-const SCLS={'當季':'s-cur','未來':'s-fut','待整理':'s-grc','穿不下':'s-old','已轉送':'s-don'};
-const SLB={'當季':'✅ 當季','未來':'📦 未來','待整理':'🗂️ 待整理','穿不下':'🚫 穿不下','已轉送':'🌈 已轉送'};
+  '🧥 外套':'🧥','👶 包屁衣':'👶','😴 睡衣':'😴','🧦 褲襪/襪子':'🧦','🎀 配件':'🎀','🛁 浴巾/毛毯':'🛁'};
+const SCLS={'當季':'s-cur','未來':'s-fut','恩典牌':'s-grc','穿不下':'s-old','轉送':'s-don'};
+const SLB={'當季':'✅ 當季','未來':'📦 未來','恩典牌':'🎁 恩典牌','穿不下':'🚫 穿不下','轉送':'🌈 轉送'};
 const COL_MAP={
   '名稱':'name','衣物名稱':'name','類型':'cat','分類':'cat',
   '尺碼':'size','尺寸':'size','季節':'season','厚度':'sleeve','袖長':'sleeve',
@@ -925,10 +918,7 @@ function render(){
 
   if(batchMode) container.classList.add('batch-mode');
   renderStats();
-  const cur=clothes.filter(x=>x.status==='當季').length;
-  const syncDot=document.getElementById('ward-sync-dot');
-  const syncHtml=syncDot?`<span id="ward-sync-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${syncDot.style.background||'#f9c4d2'};vertical-align:middle;margin-left:3px;"></span>`:`<span id="ward-sync-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f9c4d2;vertical-align:middle;margin-left:3px;"></span>`;
-  document.getElementById('header-sub').innerHTML=`共 ${clothes.length} 件衣物 🐾　<span style="color:#1a8060;font-weight:900">${cur} 件當季</span> ${syncHtml}`;
+  document.getElementById('header-sub').textContent=`共 ${clothes.length} 件衣物 🐾`;
 }
 
 function gridCard(c){
@@ -970,25 +960,13 @@ function listCard(c){
 }
 
 function renderStats(){
-  const t=clothes.length,
-    cur=clothes.filter(x=>x.status==='當季').length,
-    fut=clothes.filter(x=>x.status==='未來').length,
-    pend=clothes.filter(x=>x.status==='待整理').length,
-    worn=clothes.filter(x=>x.status==='穿不下').length;
-  // 類別統計（只顯示數量>0的）
-  const catCounts={};
-  clothes.forEach(c=>{catCounts[c.cat]=(catCounts[c.cat]||0)+1;});
-  const catItems=Object.entries(catCounts).sort((a,b)=>b[1]-a[1]);
-  const catBadges=catItems.map(([cat,n])=>`<span class="cat-stat-badge"><span class="cat-stat-n">${n}</span><span class="cat-stat-l">${(CAT_E[cat]||'👗')+' '+(cat.replace(/^[^\s]+\s/,''))}</span></span>`).join('');
+  const t=clothes.length,c=clothes.filter(x=>x.status==='當季').length,
+    f=clothes.filter(x=>x.status==='未來').length,g=clothes.filter(x=>x.status==='恩典牌').length;
   document.getElementById('stats-bar').innerHTML=`
-    <div class="stats-top">
-      <div class="sitem"><div class="sn" style="color:#d04070">${t}</div><div class="sl">總件數</div></div>
-      <div class="sitem"><div class="sn" style="color:#1a8060">${cur}</div><div class="sl">當季穿</div></div>
-      <div class="sitem"><div class="sn" style="color:#1a5aaa">${fut}</div><div class="sl">未來穿</div></div>
-      <div class="sitem"><div class="sn" style="color:#aa8800">${pend}</div><div class="sl">待整理</div></div>
-      <div class="sitem"><div class="sn" style="color:#7a1a9a">${worn}</div><div class="sl">穿不下</div></div>
-    </div>
-    ${catItems.length?`<div class="stats-cats">${catBadges}</div>`:''}`;
+    <div class="sitem"><div class="sn" style="color:#d04070">${t}</div><div class="sl">總件數</div></div>
+    <div class="sitem"><div class="sn" style="color:#1a8060">${c}</div><div class="sl">當季穿</div></div>
+    <div class="sitem"><div class="sn" style="color:#1a5aaa">${f}</div><div class="sl">未來穿</div></div>
+    <div class="sitem"><div class="sn" style="color:#aa8800">${g}</div><div class="sl">恩典牌</div></div>`;
 }
 
 // ═══════════════════════════════════════
@@ -1339,7 +1317,7 @@ function handleBulkImport(input){
       const headers=rows[0].map(h=>String(h).trim());
       const data=rows.slice(1).filter(r=>r.some(v=>String(v).trim()!==''));
       pendingBulkData=data.map(row=>{
-        const obj={id:Date.now()+Math.random()+'',status:'待整理',updatedAt:new Date().toLocaleDateString('zh-TW')};
+        const obj={id:Date.now()+Math.random()+'',status:'恩典牌',updatedAt:new Date().toLocaleDateString('zh-TW')};
         headers.forEach((h,i)=>{
           const key=COL_MAP[h]||COL_MAP[h.replace(/[（）()\s]/g,'')];
           if(key&&row[i]!==undefined&&row[i]!=='')obj[key]=String(row[i]).trim();
