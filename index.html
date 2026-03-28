@@ -193,9 +193,9 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
 .zmiao{background:linear-gradient(135deg,#fff8f0,#fce4ec);border-top:1px dashed var(--bd);
   padding:8px 14px 10px;font-size:.65rem;font-weight:700;color:#a04060;line-height:1.7;display:none;}
 .zmiao.show{display:block;}
-.zcard-actions{display:flex;gap:6px;padding:0 14px 11px;flex-wrap:wrap;}
-.zact-btn{padding:5px 10px;border-radius:14px;border:none;font-family:'Nunito',sans-serif;
-  font-size:.6rem;font-weight:800;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.zcard-actions{display:flex;gap:6px;padding:8px 14px 13px;flex-wrap:wrap;}
+.zact-btn{padding:7px 14px;border-radius:14px;border:none;font-family:'Nunito',sans-serif;
+  font-size:.64rem;font-weight:800;cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0;}
 .zact-filter{background:#e8f0ff;color:#1a4aaa;}
 .zact-edit{background:var(--cr);color:var(--sub);}
 .zact-del{background:#ffe0e8;color:#c02050;}
@@ -276,10 +276,10 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
 .mbtn-danger{flex:2;padding:12px;border-radius:16px;border:none;
   background:linear-gradient(135deg,#ffb0c0,#f04060);
   font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:800;color:#fff;cursor:pointer;}
-.detail-img{width:100%;height:192px;border-radius:22px;
+.detail-img{width:100%;height:220px;border-radius:22px;
   background:linear-gradient(135deg,#fce4ec,#fff3e0);
   display:flex;align-items:center;justify-content:center;font-size:4rem;margin-bottom:14px;overflow:hidden;}
-.detail-img img{width:100%;height:100%;object-fit:cover;}
+.detail-img img{width:100%;height:100%;object-fit:contain;background:#fafafa;border-radius:22px;}
 .detail-row{display:flex;justify-content:space-between;align-items:flex-start;
   padding:8px 0;border-bottom:1px dashed var(--bd);font-size:.76rem;}
 .detail-row:last-child{border-bottom:none;}
@@ -857,8 +857,11 @@ function ccCancel(){document.getElementById('cat-confirm-overlay').classList.rem
 function showSuccess(txt='喵！本喵幫你收好了！'){
   const o=document.getElementById('success-overlay');
   document.getElementById('success-txt').textContent=txt;
+  // 重置動畫（重新觸發）
+  o.classList.remove('show');
+  void o.offsetHeight;
   o.classList.add('show');
-  setTimeout(()=>o.classList.remove('show'),1400);
+  setTimeout(()=>o.classList.remove('show'),1600);
 }
 
 // ═══════════════════════════════════════
@@ -1145,7 +1148,7 @@ function openDetail(id){
   viewingId=id;
   const box=document.getElementById('d-img');
   box.style.fontSize='4rem';
-  box.innerHTML=c.photo?`<img src="${c.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:22px;">`:CAT_E[c.cat]||'👗';
+  box.innerHTML=c.photo?`<img src="${c.photo}" style="width:100%;height:100%;object-fit:contain;background:#fafafa;border-radius:22px;">`:CAT_E[c.cat]||'👗';
   document.getElementById('d-rows').innerHTML=[
     ['名稱',c.name],['類型',c.cat],['📏 尺碼',c.size||'—'],
     ['袖長',c.sleeve||'—'],['季節',c.season||'—'],['顏色',c.color||'—'],
@@ -1444,9 +1447,9 @@ function resetAllConfirm(){
 var wardRoomCode = '';
 var wardSaveTimer = null;
 var wardUnsub = null;
-// 每個 session 產生唯一 token，推送時帶上，收到自己的 snapshot 就靜默
+var wardLastPushedAt = 0;  // 最後一次成功推送的時間戳
 var wardSessionToken = Math.random().toString(36).slice(2);
-var wardPendingToken = null; // 最後一次推送帶的 token
+var wardPendingToken = null;
 
 function wardLogin(){
   var v = document.getElementById('wardRoomInput').value.trim().toLowerCase().replace(/\s+/g,'');
@@ -1471,17 +1474,22 @@ function wardPush(){
   if(!wardRoomCode||!window._wardFbSet) return;
   clearTimeout(wardSaveTimer);
   wardSaveTimer = setTimeout(function(){
-    wardPendingToken = wardSessionToken; // 記住這次推送的 token
+    var ts = Date.now();
+    wardLastPushedAt = ts;
     window._wardFbSet(wardRoomCode, {
       clothes:clothes, zones:zones,
-      updatedAt:Date.now(),
-      senderToken: wardSessionToken  // 寫進 Firestore
+      updatedAt: ts,
+      senderToken: wardSessionToken
     }).catch(function(){});
   }, 800);
 }
 
 function wardApplyRemote(data, showNotif){
-  // 套用遠端資料（不呼叫 saveClothes/saveZones 避免觸發再次 push）
+  // 如果遠端資料比我們最後推送的還舊，不套用（避免蓋掉本機新資料）
+  if(wardLastPushedAt > 0 && data.updatedAt && data.updatedAt < wardLastPushedAt){
+    wardSetSyncDot('on');
+    return;
+  }
   if(data.clothes) clothes = data.clothes;
   if(data.zones)   zones   = data.zones;
   localStorage.setItem(KEY_C, JSON.stringify(clothes));
@@ -1495,20 +1503,26 @@ function wardStartSync(){
   if(wardUnsub){ wardUnsub(); wardUnsub=null; }
   if(!window._wardFbGet) return;
   wardSetSyncDot('off');
-  // 初始拉取（不 toast）
-  window._wardFbGet(wardRoomCode).then(function(snap){
-    if(snap.exists()) wardApplyRemote(snap.data(), false);
-    else { if(clothes.length>0) wardPush(); }
-    wardSetSyncDot('on');
-  }).catch(function(){ wardSetSyncDot('err'); });
-  // 即時監聽
+  // onSnapshot 一定會立刻觸發第一次（初始值），這次永遠靜默
+  var snapshotCount = 0;
   wardUnsub = window._wardFbListen(wardRoomCode, function(data){
-    // 是自己推送的 → 靜默
+    snapshotCount++;
+    if(snapshotCount === 1){
+      // 第一次 = 初始載入，靜默套用
+      wardApplyRemote(data, false);
+      wardSetSyncDot('on');
+      // 若 Firestore 沒資料但本機有，推送上去
+      if(!data.clothes || data.clothes.length === 0){
+        if(clothes.length > 0) wardPush();
+      }
+      return;
+    }
+    // 之後的 snapshot：是自己推送的 → 靜默
     if(data.senderToken && data.senderToken === wardSessionToken){
       wardSetSyncDot('on');
       return;
     }
-    // 真的是其他裝置 → 套用並通知
+    // 真的是其他裝置更新 → 套用並通知
     wardApplyRemote(data, true);
   });
 }
