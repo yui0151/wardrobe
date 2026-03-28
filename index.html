@@ -99,17 +99,17 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
 
 /* ════ FILTER STRIP ════ */
 .filter-strip{flex-shrink:0;padding:7px 0 0;}
-.status-row,.cat-row{display:flex;gap:5px;padding:0 14px;overflow-x:auto;scrollbar-width:none;}
-.status-row{padding-bottom:5px;border-bottom:1px solid var(--bd);}
-.cat-row{padding-top:5px;}
+.status-row,.cat-row{display:flex;gap:5px;padding:0 14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.status-row{padding-bottom:6px;border-bottom:1px solid var(--bd);}
+.cat-row{padding-top:5px;padding-bottom:8px;}
 .status-row::-webkit-scrollbar,.cat-row::-webkit-scrollbar{display:none;}
 .stab{flex-shrink:0;padding:5px 13px;border-radius:30px;font-size:.63rem;font-weight:800;
   cursor:pointer;background:#f0e0e8;color:var(--sub);border:none;transition:all .2s;
   box-shadow:0 1px 4px var(--sd);}
 .stab.active{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;box-shadow:0 3px 10px var(--sp2);}
-.ctab{flex-shrink:0;padding:4px 10px;border-radius:20px;font-size:.61rem;font-weight:800;
+.ctab{flex-shrink:0;padding:5px 11px;border-radius:20px;font-size:.61rem;font-weight:800;
   cursor:pointer;background:transparent;color:var(--sub);border:1.5px solid var(--bd);
-  transition:all .2s;white-space:nowrap;}
+  transition:all .2s;white-space:nowrap;line-height:1.4;}
 .ctab.active{background:var(--tx);color:#fff;border-color:var(--tx);}
 
 /* ════ MAIN ════ */
@@ -478,7 +478,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
       <div class="ctab" onclick="setCat('👚 套裝',this)">👚 套裝</div>
       <div class="ctab" onclick="setCat('🌸 雪紡/襯衫',this)">🌸 雪紡</div>
       <div class="ctab" onclick="setCat('🧥 外套',this)">🧥 外套</div>
-      <div class="ctab" onclick="setCat('👶 包屁衣',this)">👶 包屁衣</div>
+      <div class="ctab" onclick="setCat('👶🏻 包屁衣',this)">👶🏻 包屁衣</div>
       <div class="ctab" onclick="setCat('😴 睡衣',this)">😴 睡衣</div>
       <div class="ctab" onclick="setCat('🎀 配件',this)">🎀 配件</div>
       <div class="ctab" onclick="setCat('📦 其他',this)">📦 其他</div>
@@ -540,7 +540,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
         <select id="f-cat">
           <option>👕 上衣</option><option>👗 洋裝/連身</option><option>👖 褲子</option>
           <option>👚 套裝</option><option>🌸 雪紡/襯衫</option><option>🧥 外套</option>
-          <option>👶 包屁衣</option><option>😴 睡衣</option><option>🎀 配件</option><option>📦 其他</option>
+          <option>👶🏻 包屁衣</option><option>😴 睡衣</option><option>🎀 配件</option><option>📦 其他</option>
         </select>
       </div>
     </div>
@@ -632,7 +632,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
   <div id="d-wore-log"></div>
   <div class="modal-btns" style="margin-top:14px;">
     <button class="mbtn-c" onclick="closeDetail()">關閉</button>
-    <button class="mbtn-wore" onclick="logWore()">👕 今天穿了！</button>
+    <button class="mbtn-wore" onclick="logWore()">+1 次穿著</button>
     <button class="mbtn-a" onclick="editCurrent()">✏️ 編輯</button>
   </div>
 </div>
@@ -789,7 +789,7 @@ const MIAO_TIPS={
 };
 
 const CAT_E={'👕 上衣':'👕','👗 洋裝/連身':'👗','👖 褲子':'👖','🌸 雪紡/襯衫':'🌸',
-  '🧥 外套':'🧥','👶 包屁衣':'👶','😴 睡衣':'😴','👚 套裝':'👚','🎀 配件':'🎀','📦 其他':'📦'};
+  '🧥 外套':'🧥','👶🏻 包屁衣':'👶🏻','😴 睡衣':'😴','👚 套裝':'👚','🎀 配件':'🎀','📦 其他':'📦'};
 const SCLS={'當季':'s-cur','未來':'s-fut','待整理':'s-grc','穿不下':'s-old','已轉送':'s-don'};
 const SLB={'當季':'✅ 當季','未來':'📦 未來','待整理':'🗂️ 待整理','穿不下':'🚫 穿不下','已轉送':'🌈 已轉送'};
 const COL_MAP={
@@ -956,10 +956,10 @@ function render(){
 
   if(batchMode) container.classList.add('batch-mode');
   renderStats();
-  const cur=clothes.filter(x=>x.status==='當季').length;
+  // header-sub：只保留同步狀態點，件數已在 stats-bar 顯示
   const syncDot=document.getElementById('ward-sync-dot');
-  const syncHtml=syncDot?`<span id="ward-sync-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${syncDot.style.background||'#f9c4d2'};vertical-align:middle;margin-left:3px;"></span>`:`<span id="ward-sync-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f9c4d2;vertical-align:middle;margin-left:3px;"></span>`;
-  document.getElementById('header-sub').innerHTML=`共 ${clothes.length} 件衣物 🐾　<span style="color:#1a8060;font-weight:900">${cur} 件當季</span> ${syncHtml}`;
+  const dotBg=syncDot?syncDot.style.background:'#f9c4d2';
+  document.getElementById('header-sub').innerHTML=`喵管家準備好了 🐾 <span id="ward-sync-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${dotBg};vertical-align:middle;margin-left:3px;"></span>`;
 }
 
 function gridCard(c){
@@ -970,6 +970,9 @@ function gridCard(c){
   const sel=selectedIds.has(c.id);
   const sznTxt=[c.size,c.sleeve].filter(Boolean).join(' · ');
   const woreCount=(c.woreLog||[]).length;
+  const woreBadge=woreCount===0
+    ?`<span class="ctag" style="background:#f0e8ee;color:#b080a0;">未穿過</span>`
+    :`<span class="ctag" style="background:#e4f8f0;color:#1a6a40;">👕 ${woreCount}次</span>`;
   return `<div class="ccard${sel?' selected':''}" onclick="cardClick('${c.id}')">
     <div class="ccard-ck">✓</div>${imgH}
     <div class="ccard-body">
@@ -978,7 +981,7 @@ function gridCard(c){
         ${sznTxt?`<span class="ctag">📏 ${esc(sznTxt)}</span>`:''}
         ${c.location?`<span class="ctag ctag-mint">📍 ${esc(c.location)}</span>`:''}
         ${c.season?`<span class="ctag">${esc(c.season)}</span>`:''}
-        ${woreCount?`<span class="ctag" style="background:#e4f8f0;color:#1a6a40;">👕 ${woreCount}次</span>`:''}
+        ${woreBadge}
       </div>
     </div>
   </div>`;
@@ -1234,34 +1237,36 @@ function openDetail(id){
 }
 
 function renderWoreLog(c){
-  const log=c.woreLog||[];
-  const total=log.length;
+  const total=(c.woreLog||[]).length;
   const logEl=document.getElementById('d-wore-log');
-  const chipsHTML=log.length
-    ?log.slice().reverse().map((d,i)=>
-        `<span class="wore-chip">👕 ${esc(d)}<button onclick="removeWore(${log.length-1-i})" title="刪除">×</button></span>`
-      ).join('')
-    :`<div class="wore-log-empty">還沒有穿著紀錄喔 🐾</div>`;
   logEl.innerHTML=`<div class="wore-log">
-    <div class="wore-log-title">👕 穿著紀錄 ${total?`（共 ${total} 次）`:''}
+    <div class="wore-log-title">👕 穿著次數</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:2px;">
+      <span style="font-size:1.6rem;font-weight:900;color:var(--p3);">${total}</span>
+      <span style="font-size:.7rem;font-weight:700;color:var(--sub);">次${total===0?'　尚未穿過喔 🐾':total<3?'　剛開始穿～':'　穿很多次了！'}</span>
+      ${total>0?`<button onclick="undoWore()" style="margin-left:auto;background:none;border:1.5px solid var(--bd);border-radius:10px;padding:3px 9px;font-size:.6rem;font-weight:800;color:var(--sub);cursor:pointer;">-1 撤銷</button>`:''}
     </div>
-    <div class="wore-chips">${chipsHTML}</div>
   </div>`;
 }
 
 function logWore(){
   const c=clothes.find(x=>x.id===viewingId);if(!c)return;
-  const today=new Date().toLocaleDateString('zh-TW');
   if(!c.woreLog) c.woreLog=[];
-  // 同一天只記一次
-  if(c.woreLog[c.woreLog.length-1]===today){
-    showToast('今天已經記錄過囉！本喵記得很清楚 🐾','😸');return;
-  }
-  c.woreLog.push(today);
+  c.woreLog.push(new Date().toLocaleDateString('zh-TW'));
   clothes=clothes.map(x=>x.id===viewingId?c:x);
   saveClothes();
   renderWoreLog(c);
-  showToast(`喵！記錄「${c.name}」今天穿了 👕`,'😸',2200);
+  render(); // 更新卡片上的次數 badge
+  showToast(`喵！「${c.name}」又穿了一次，共 ${c.woreLog.length} 次 👕`,'😸',2200);
+}
+
+function undoWore(){
+  const c=clothes.find(x=>x.id===viewingId);if(!c||!c.woreLog||!c.woreLog.length)return;
+  c.woreLog.pop();
+  clothes=clothes.map(x=>x.id===viewingId?c:x);
+  saveClothes();
+  renderWoreLog(c);
+  render();
 }
 
 function removeWore(idx){
