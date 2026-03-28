@@ -273,9 +273,19 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
 .mbtn-a{flex:2;padding:12px;border-radius:16px;border:none;
   background:linear-gradient(135deg,var(--p1),var(--p2));
   font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:800;color:#fff;cursor:pointer;}
+.mbtn-wore{flex:2;padding:12px;border-radius:16px;border:none;
+  background:linear-gradient(135deg,#d0f5e8,#7ecfae);
+  font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:800;color:#1a5a40;cursor:pointer;}
 .mbtn-danger{flex:2;padding:12px;border-radius:16px;border:none;
   background:linear-gradient(135deg,#ffb0c0,#f04060);
   font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:800;color:#fff;cursor:pointer;}
+.wore-log{margin-top:10px;background:var(--cr);border-radius:14px;padding:10px 12px;}
+.wore-log-title{font-size:.6rem;font-weight:900;color:var(--sub);letter-spacing:1px;margin-bottom:7px;}
+.wore-log-empty{font-size:.7rem;color:#c0a0b0;font-weight:700;text-align:center;padding:6px 0;}
+.wore-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.wore-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;
+  background:#e4f8f0;color:#1a6a40;font-size:.62rem;font-weight:800;}
+.wore-chip button{background:none;border:none;color:#c06080;font-size:.75rem;cursor:pointer;padding:0;line-height:1;margin-left:2px;}
 .detail-img{width:100%;height:200px;border-radius:18px;
   background:linear-gradient(135deg,#fce4ec,#fff3e0);
   display:flex;align-items:center;justify-content:center;font-size:4rem;margin-bottom:12px;overflow:hidden;}
@@ -619,8 +629,10 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
   <div class="modal-handle"></div>
   <div class="detail-img" id="d-img"></div>
   <div id="d-rows"></div>
+  <div id="d-wore-log"></div>
   <div class="modal-btns" style="margin-top:14px;">
     <button class="mbtn-c" onclick="closeDetail()">關閉</button>
+    <button class="mbtn-wore" onclick="logWore()">👕 今天穿了！</button>
     <button class="mbtn-a" onclick="editCurrent()">✏️ 編輯</button>
   </div>
 </div>
@@ -880,8 +892,8 @@ function loadAll(){
   try{clothes=JSON.parse(localStorage.getItem(KEY_C)||'[]');}catch{clothes=[];}
   try{const z=localStorage.getItem(KEY_Z);zones=z?JSON.parse(z):[...DEFAULT_ZONES];}catch{zones=[...DEFAULT_ZONES];}
 }
-function saveClothes(){localStorage.setItem(KEY_C,JSON.stringify(clothes));wardPush();}
-function saveZones(){localStorage.setItem(KEY_Z,JSON.stringify(zones));wardPush();}
+function saveClothes(){localStorage.setItem(KEY_C,JSON.stringify(clothes));setLocalTs(Date.now());wardPush();}
+function saveZones(){localStorage.setItem(KEY_Z,JSON.stringify(zones));setLocalTs(Date.now());wardPush();}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 // ═══════════════════════════════════════
@@ -891,7 +903,16 @@ function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.
 function enterApp(){showView('view-home');render();localStorage.setItem('miao-v','1');}
 function goHome(){showView('view-home');render();}
 function goZone(){showView('view-zone');renderZones();}
-function goAdd(){resetForm();buildLocChips();editingId=null;document.getElementById('add-title').textContent='🐾 新增新衣服';showView('view-add');}
+function goAdd(){
+  resetForm();buildLocChips();editingId=null;
+  document.getElementById('add-title').textContent='🐾 新增新衣服';
+  showView('view-add');
+  // 捲回頂部
+  requestAnimationFrame(()=>{
+    const s=document.querySelector('.add-scroll');
+    if(s) s.scrollTop=0;
+  });
+}
 function setHomeNav(el){document.querySelectorAll('#view-home .nbtn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
 
 // ═══════════════════════════════════════
@@ -948,6 +969,7 @@ function gridCard(c){
     :`<div class="ccard-img">${em}<div class="cbadge"><span class="status-pill ${SCLS[c.status]||'s-grc'}">${SLB[c.status]||c.status}</span></div></div>`;
   const sel=selectedIds.has(c.id);
   const sznTxt=[c.size,c.sleeve].filter(Boolean).join(' · ');
+  const woreCount=(c.woreLog||[]).length;
   return `<div class="ccard${sel?' selected':''}" onclick="cardClick('${c.id}')">
     <div class="ccard-ck">✓</div>${imgH}
     <div class="ccard-body">
@@ -956,6 +978,7 @@ function gridCard(c){
         ${sznTxt?`<span class="ctag">📏 ${esc(sznTxt)}</span>`:''}
         ${c.location?`<span class="ctag ctag-mint">📍 ${esc(c.location)}</span>`:''}
         ${c.season?`<span class="ctag">${esc(c.season)}</span>`:''}
+        ${woreCount?`<span class="ctag" style="background:#e4f8f0;color:#1a6a40;">👕 ${woreCount}次</span>`:''}
       </div>
     </div>
   </div>`;
@@ -1076,9 +1099,20 @@ function handlePhoto(input){
   const file=input.files[0];if(!file)return;
   const r=new FileReader();
   r.onload=e=>{
-    photoData=e.target.result;
-    const box=document.getElementById('photo-box');
-    box.innerHTML=`<img src="${photoData}"><div style="position:absolute;bottom:7px;right:8px;background:rgba(255,255,255,.9);border-radius:10px;padding:2px 9px;font-size:.57rem;font-weight:800;color:#7a2048;">換照片 📷</div>`;
+    // 壓縮圖片再存，避免 base64 太大炸掉 Firestore
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=900;
+      let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
+      const canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      photoData=canvas.toDataURL('image/jpeg',0.72);
+      const box=document.getElementById('photo-box');
+      box.innerHTML=`<img src="${photoData}"><div style="position:absolute;bottom:7px;right:8px;background:rgba(255,255,255,.9);border-radius:10px;padding:2px 9px;font-size:.57rem;font-weight:800;color:#7a2048;">換照片 📷</div>`;
+    };
+    img.src=e.target.result;
   };
   r.readAsDataURL(file);
 }
@@ -1144,9 +1178,17 @@ function saveItem(){
   };
   if(isEdit)clothes=clothes.map(c=>c.id===editingId?item:c);
   else clothes.unshift(item);
-  saveClothes();
+  // 先存本機，並記錄時間戳
+  var ts = Date.now();
+  localStorage.setItem(KEY_C, JSON.stringify(clothes));
+  setLocalTs(ts);
   showSuccess(isEdit?'喵！本喵已幫你更新好了！':'喵！新衣服入庫成功 🐾');
-  setTimeout(()=>{goHome();const m=getMiaoMsg(item,isEdit);showToast(m.m,m.c,2800);},900);
+  setTimeout(()=>{
+    goHome();
+    const m=getMiaoMsg(item,isEdit);
+    showToast(m.m,m.c,2800);
+    wardPush();
+  },900);
 }
 
 // ═══════════════════════════════════════
@@ -1159,7 +1201,6 @@ function openDetail(id){
   box.style.fontSize='4rem';
   box.innerHTML=c.photo?`<img src="${c.photo}" style="width:100%;height:100%;object-fit:contain;background:#fafafa;border-radius:18px;">`:CAT_E[c.cat]||'👗';
 
-  // 2欄格子的欄位（短值）
   const gridFields=[
     ['類型', c.cat||'—'],
     ['📏 尺碼', c.size||'—'],
@@ -1168,7 +1209,6 @@ function openDetail(id){
     ['顏色', c.color||'—'],
     ['價格', c.price?'NT$ '+c.price:'—'],
   ];
-  // 全寬列（長值）
   const fullFields=[
     ['🔖 狀態', SLB[c.status]||c.status],
     ['🎁 來源', [c.source,c.sourceWho].filter(Boolean).join(' · ')||'—'],
@@ -1181,16 +1221,55 @@ function openDetail(id){
   const gridHTML=`<div class="detail-grid">${gridFields.map(([k,v])=>
     `<div class="dgrid-item"><div class="dgrid-key">${k}</div><div class="dgrid-val">${esc(String(v))}</div></div>`
   ).join('')}</div>`;
-
   const fullHTML=fullFields.map(([k,v])=>
     `<div class="detail-row-full"><span class="detail-key-f">${k}</span><span class="detail-val-f">${esc(String(v))}</span></div>`
   ).join('');
 
   document.getElementById('d-rows').innerHTML=
-    `<div class="detail-name">${esc(c.name)}</div>`+
-    gridHTML+fullHTML;
+    `<div class="detail-name">${esc(c.name)}</div>`+gridHTML+fullHTML;
 
+  // 穿著紀錄
+  renderWoreLog(c);
   document.getElementById('detail-overlay').classList.add('show');
+}
+
+function renderWoreLog(c){
+  const log=c.woreLog||[];
+  const total=log.length;
+  const logEl=document.getElementById('d-wore-log');
+  const chipsHTML=log.length
+    ?log.slice().reverse().map((d,i)=>
+        `<span class="wore-chip">👕 ${esc(d)}<button onclick="removeWore(${log.length-1-i})" title="刪除">×</button></span>`
+      ).join('')
+    :`<div class="wore-log-empty">還沒有穿著紀錄喔 🐾</div>`;
+  logEl.innerHTML=`<div class="wore-log">
+    <div class="wore-log-title">👕 穿著紀錄 ${total?`（共 ${total} 次）`:''}
+    </div>
+    <div class="wore-chips">${chipsHTML}</div>
+  </div>`;
+}
+
+function logWore(){
+  const c=clothes.find(x=>x.id===viewingId);if(!c)return;
+  const today=new Date().toLocaleDateString('zh-TW');
+  if(!c.woreLog) c.woreLog=[];
+  // 同一天只記一次
+  if(c.woreLog[c.woreLog.length-1]===today){
+    showToast('今天已經記錄過囉！本喵記得很清楚 🐾','😸');return;
+  }
+  c.woreLog.push(today);
+  clothes=clothes.map(x=>x.id===viewingId?c:x);
+  saveClothes();
+  renderWoreLog(c);
+  showToast(`喵！記錄「${c.name}」今天穿了 👕`,'😸',2200);
+}
+
+function removeWore(idx){
+  const c=clothes.find(x=>x.id===viewingId);if(!c||!c.woreLog)return;
+  c.woreLog.splice(idx,1);
+  clothes=clothes.map(x=>x.id===viewingId?c:x);
+  saveClothes();
+  renderWoreLog(c);
 }
 function closeDetail(){document.getElementById('detail-overlay').classList.remove('show');}
 function editCurrent(){
@@ -1215,6 +1294,10 @@ function editCurrent(){
   document.querySelectorAll('#sleeve-chips .chip').forEach(el=>{if(el.textContent.trim()===c.sleeve)el.classList.add('sel-slv');});
   document.querySelectorAll('#size-chips .chip').forEach(el=>{if(el.textContent.trim()===c.size){el.classList.add('sel-size');selectedSize=c.size;}});
   showView('view-add');
+  requestAnimationFrame(()=>{
+    const s=document.querySelector('.add-scroll');
+    if(s) s.scrollTop=0;
+  });
 }
 
 // ═══════════════════════════════════════
@@ -1480,9 +1563,11 @@ function resetAllConfirm(){
 var wardRoomCode = '';
 var wardSaveTimer = null;
 var wardUnsub = null;
-var wardLastPushedAt = 0;  // 最後一次成功推送的時間戳
 var wardSessionToken = Math.random().toString(36).slice(2);
-var wardPendingToken = null;
+// 本機最後儲存時間戳，存 localStorage 讓重整後仍能判斷
+var KEY_TS = 'xiaodu-ts-v4';
+function getLocalTs(){ return parseInt(localStorage.getItem(KEY_TS)||'0'); }
+function setLocalTs(ts){ localStorage.setItem(KEY_TS, String(ts)); }
 
 function wardLogin(){
   var v = document.getElementById('wardRoomInput').value.trim().toLowerCase().replace(/\s+/g,'');
@@ -1508,25 +1593,29 @@ function wardPush(){
   clearTimeout(wardSaveTimer);
   wardSaveTimer = setTimeout(function(){
     var ts = Date.now();
-    wardLastPushedAt = ts;
+    setLocalTs(ts);
     window._wardFbSet(wardRoomCode, {
       clothes:clothes, zones:zones,
       updatedAt: ts,
       senderToken: wardSessionToken
-    }).catch(function(){});
+    }).catch(function(e){ console.warn('Firebase push failed:', e.message); });
   }, 800);
 }
 
 function wardApplyRemote(data, showNotif){
-  // 如果遠端資料比我們最後推送的還舊，不套用（避免蓋掉本機新資料）
-  if(wardLastPushedAt > 0 && data.updatedAt && data.updatedAt < wardLastPushedAt){
+  var localTs = getLocalTs();
+  var remoteTs = data.updatedAt || 0;
+  // 本機比雲端新 → 不套用，把本機推上去
+  if(localTs > remoteTs){
     wardSetSyncDot('on');
+    wardPush(); // 確保雲端跟本機同步
     return;
   }
   if(data.clothes) clothes = data.clothes;
   if(data.zones)   zones   = data.zones;
   localStorage.setItem(KEY_C, JSON.stringify(clothes));
   localStorage.setItem(KEY_Z, JSON.stringify(zones));
+  // 不更新 KEY_TS，這樣下次比較還是以雲端時間為準
   render();
   wardSetSyncDot('on');
   if(showNotif) showToast('喵！家人剛剛更新了衣櫃資料，已同步囉 🐾','✨');
@@ -1536,26 +1625,20 @@ function wardStartSync(){
   if(wardUnsub){ wardUnsub(); wardUnsub=null; }
   if(!window._wardFbGet) return;
   wardSetSyncDot('off');
-  // onSnapshot 一定會立刻觸發第一次（初始值），這次永遠靜默
   var snapshotCount = 0;
   wardUnsub = window._wardFbListen(wardRoomCode, function(data){
     snapshotCount++;
     if(snapshotCount === 1){
-      // 第一次 = 初始載入，靜默套用
+      // 第一次：比較本機 vs 雲端時間戳，新的贏
       wardApplyRemote(data, false);
-      wardSetSyncDot('on');
-      // 若 Firestore 沒資料但本機有，推送上去
-      if(!data.clothes || data.clothes.length === 0){
-        if(clothes.length > 0) wardPush();
-      }
       return;
     }
-    // 之後的 snapshot：是自己推送的 → 靜默
+    // 之後：是自己推送的 → 靜默
     if(data.senderToken && data.senderToken === wardSessionToken){
       wardSetSyncDot('on');
       return;
     }
-    // 真的是其他裝置更新 → 套用並通知
+    // 真的是其他裝置 → 套用並通知
     wardApplyRemote(data, true);
   });
 }
