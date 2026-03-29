@@ -1610,17 +1610,18 @@ function wardPush(){
 function wardApplyRemote(data, showNotif){
   var localTs = getLocalTs();
   var remoteTs = data.updatedAt || 0;
-  // 本機比雲端新 → 不套用，把本機推上去
+  // 本機比雲端新 → 不套用遠端，靜默推本機上去補齊
   if(localTs > remoteTs){
     wardSetSyncDot('on');
-    wardPush(); // 確保雲端跟本機同步
+    wardPush();
     return;
   }
+  // 雲端比本機新 → 套用
   if(data.clothes) clothes = data.clothes;
   if(data.zones)   zones   = data.zones;
+  setLocalTs(remoteTs); // 更新本機時間戳，防止下次誤判
   localStorage.setItem(KEY_C, JSON.stringify(clothes));
   localStorage.setItem(KEY_Z, JSON.stringify(zones));
-  // 不更新 KEY_TS，這樣下次比較還是以雲端時間為準
   render();
   wardSetSyncDot('on');
   if(showNotif) showToast('喵！家人剛剛更新了衣櫃資料，已同步囉 🐾','✨');
