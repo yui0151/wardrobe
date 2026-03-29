@@ -451,6 +451,21 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
 
   <div class="stats-bar" id="stats-bar"></div>
 
+  <!-- 搜尋列 + 排序 -->
+  <div style="display:flex;gap:8px;padding:6px 14px 4px;flex-shrink:0;">
+    <div style="flex:1;display:flex;align-items:center;gap:6px;background:#fff0f4;border:1.5px solid var(--bd);border-radius:20px;padding:6px 12px;">
+      <span style="font-size:14px;color:#c06080;">🔍</span>
+      <input id="searchInput" placeholder="搜尋衣物名稱…" oninput="render()"
+        style="flex:1;border:none;background:transparent;font-family:'Nunito',sans-serif;font-size:13px;color:var(--tx);outline:none;min-width:0;">
+      <button onclick="document.getElementById('searchInput').value='';render();"
+        style="border:none;background:none;color:#c06080;font-size:14px;cursor:pointer;padding:0;line-height:1;">✕</button>
+    </div>
+    <button id="sortBtn" onclick="cycleSortMode()"
+      style="flex-shrink:0;padding:6px 12px;background:#fff0f4;border:1.5px solid var(--bd);border-radius:20px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:#c06080;cursor:pointer;white-space:nowrap;" title="切換排序">
+      ↕ <span id="sortLabel">新→舊</span>
+    </button>
+  </div>
+
   <div class="batch-bar" id="batch-bar">
     <div class="binfo" id="batch-info">已選 0 件</div>
     <div class="bacts">
@@ -466,15 +481,15 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
       <div class="stab active" onclick="setStatus('all',this)">🐾 全部</div>
       <div class="stab" onclick="setStatus('當季',this)">✅ 當季</div>
       <div class="stab" onclick="setStatus('未來',this)">📦 未來</div>
-      <div class="stab" onclick="setStatus('待整理',this)">🗂️ 待整理</div>
       <div class="stab" onclick="setStatus('穿不下',this)">🚫 穿不下</div>
       <div class="stab" onclick="setStatus('已轉送',this)">🌈 已轉送</div>
+      <div class="stab" onclick="setStatus('未分類',this)">🗂️ 未分類</div>
     </div>
     <div class="cat-row">
       <div class="ctab active" onclick="setCat('all',this)">全部類別</div>
       <div class="ctab" onclick="setCat('👕 上衣',this)">👕 上衣</div>
       <div class="ctab" onclick="setCat('👗 洋裝/連身',this)">👗 洋裝/連身</div>
-      <div class="ctab" onclick="setCat('👖 褲子',this)">👖 褲子</div>
+      <div class="ctab" onclick="setCat('👖 裙子/褲子',this)">👖 裙子/褲子</div>
       <div class="ctab" onclick="setCat('👚 套裝',this)">👚 套裝</div>
       <div class="ctab" onclick="setCat('🌸 雪紡/襯衫',this)">🌸 雪紡</div>
       <div class="ctab" onclick="setCat('🧥 外套',this)">🧥 外套</div>
@@ -538,7 +553,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
       <div class="frow" style="margin:0"><label>衣物名稱 *</label><input id="f-name" placeholder="例：草莓印花洋裝"></div>
       <div class="frow" style="margin:0"><label>類型</label>
         <select id="f-cat">
-          <option>👕 上衣</option><option>👗 洋裝/連身</option><option>👖 褲子</option>
+          <option>👕 上衣</option><option>👗 洋裝/連身</option><option>👖 裙子/褲子</option>
           <option>👚 套裝</option><option>🌸 雪紡/襯衫</option><option>🧥 外套</option>
           <option>👶🏻 包屁衣</option><option>😴 睡衣</option><option>🎀 配件</option><option>📦 其他</option>
         </select>
@@ -548,6 +563,10 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
     <div class="sdiv" style="margin-top:14px;">📏 尺碼</div>
     <div class="frow">
       <div class="chips" id="size-chips">
+        <div class="chip" onclick="selSize(this,'S')">S</div>
+        <div class="chip" onclick="selSize(this,'M')">M</div>
+        <div class="chip" onclick="selSize(this,'L')">L</div>
+        <div class="chip" onclick="selSize(this,'XL')">XL</div>
         <div class="chip" onclick="selSize(this,'70')">70</div>
         <div class="chip" onclick="selSize(this,'80')">80</div>
         <div class="chip" onclick="selSize(this,'90')">90</div>
@@ -588,7 +607,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
       <div class="frow" style="margin:0"><label>狀態</label>
         <select id="f-status">
           <option value="當季">✅ 當季穿</option><option value="未來">📦 未來才穿</option>
-          <option value="待整理">🗂️ 待整理</option><option value="穿不下">🚫 穿不下了</option><option value="已轉送">🌈 已轉送</option>
+          <option value="未分類">🗂️ 未分類</option><option value="穿不下">🚫 穿不下了</option><option value="已轉送">🌈 已轉送</option>
         </select>
       </div>
     </div>
@@ -647,7 +666,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
   <div class="bstatus-grid">
     <button class="bstatus-btn" onclick="applyBatch('當季')">✅<br>當季穿</button>
     <button class="bstatus-btn" onclick="applyBatch('未來')">📦<br>未來穿</button>
-    <button class="bstatus-btn" onclick="applyBatch('待整理')">🗂️<br>待整理</button>
+    <button class="bstatus-btn" onclick="applyBatch('未分類')">🗂️<br>未分類</button>
     <button class="bstatus-btn" onclick="applyBatch('穿不下')">🚫<br>穿不下</button>
     <button class="bstatus-btn" onclick="applyBatch('已轉送')">🌈<br>已轉送</button>
   </div>
@@ -788,10 +807,10 @@ const MIAO_TIPS={
   '配件':['喵：配件用小盒子分類，本喵覺得很重要 🎀'],
 };
 
-const CAT_E={'👕 上衣':'👕','👗 洋裝/連身':'👗','👖 褲子':'👖','🌸 雪紡/襯衫':'🌸',
+const CAT_E={'👕 上衣':'👕','👗 洋裝/連身':'👗','👖 裙子/褲子':'👖','🌸 雪紡/襯衫':'🌸',
   '🧥 外套':'🧥','👶🏻 包屁衣':'👶🏻','😴 睡衣':'😴','👚 套裝':'👚','🎀 配件':'🎀','📦 其他':'📦'};
-const SCLS={'當季':'s-cur','未來':'s-fut','待整理':'s-grc','穿不下':'s-old','已轉送':'s-don'};
-const SLB={'當季':'✅ 當季','未來':'📦 未來','待整理':'🗂️ 待整理','穿不下':'🚫 穿不下','已轉送':'🌈 已轉送'};
+const SCLS={'當季':'s-cur','未來':'s-fut','未分類':'s-grc','穿不下':'s-old','已轉送':'s-don'};
+const SLB={'當季':'✅ 當季','未來':'📦 未來','未分類':'🗂️ 未分類','穿不下':'🚫 穿不下','已轉送':'🌈 已轉送'};
 const COL_MAP={
   '名稱':'name','衣物名稱':'name','類型':'cat','分類':'cat',
   '尺碼':'size','尺寸':'size','季節':'season','厚度':'sleeve','袖長':'sleeve',
@@ -811,6 +830,8 @@ let photoData='', editingId=null, viewingId=null;
 let batchMode=false, selectedIds=new Set();
 let toastTimer=null, editingZoneId=null;
 let viewMode='grid'; // 'grid' | 'list'
+let sortMode=0; // 0=新→舊 1=舊→新 2=名稱A-Z 3=尺寸
+const SORT_LABELS=['新→舊','舊→新','名稱','尺寸'];
 let pendingBulkData=[];
 let ccCallback=null;
 
@@ -927,11 +948,28 @@ function toggleView(){
 // ═══════════════════════════════════════
 // RENDER CLOTHES
 // ═══════════════════════════════════════
+function cycleSortMode(){
+  sortMode=(sortMode+1)%4;
+  document.getElementById('sortLabel').textContent=SORT_LABELS[sortMode];
+  render();
+}
+
 function getFiltered(){
-  let list=clothes;
-  if(fStatus!=='all')list=list.filter(c=>c.status===fStatus);
-  if(fCat!=='all')   list=list.filter(c=>c.cat===fCat);
-  if(fZone!=='all')  list=list.filter(c=>c.location&&c.location.includes(fZone));
+  let list=clothes.slice();
+  if(fStatus!=='all') list=list.filter(c=>c.status===fStatus);
+  if(fCat!=='all')    list=list.filter(c=>c.cat===fCat);
+  if(fZone!=='all')   list=list.filter(c=>c.location&&c.location.includes(fZone));
+  // 搜尋
+  const q=(document.getElementById('searchInput')||{}).value||'';
+  if(q.trim()){
+    const kw=q.trim().toLowerCase();
+    list=list.filter(c=>(c.name||'').toLowerCase().includes(kw)||(c.cat||'').includes(kw)||(c.color||'').includes(kw)||(c.note||'').includes(kw)||(c.size||'').toLowerCase().includes(kw));
+  }
+  // 排序
+  if(sortMode===0) list.sort((a,b)=>((b.updatedAt||'')).localeCompare(a.updatedAt||''));
+  else if(sortMode===1) list.sort((a,b)=>((a.updatedAt||'')).localeCompare(b.updatedAt||''));
+  else if(sortMode===2) list.sort((a,b)=>(a.name||'').localeCompare(b.name||'','zh-TW'));
+  else if(sortMode===3) list.sort((a,b)=>(a.size||'').localeCompare(b.size||''));
   return list;
 }
 
@@ -1009,7 +1047,7 @@ function renderStats(){
   const t=clothes.length,
     cur=clothes.filter(x=>x.status==='當季').length,
     fut=clothes.filter(x=>x.status==='未來').length,
-    pend=clothes.filter(x=>x.status==='待整理').length,
+    pend=clothes.filter(x=>x.status==='未分類').length,
     worn=clothes.filter(x=>x.status==='穿不下').length;
   // 類別統計（只顯示數量>0的）
   const catCounts={};
@@ -1021,7 +1059,7 @@ function renderStats(){
       <div class="sitem"><div class="sn" style="color:#d04070">${t}</div><div class="sl">總件數</div></div>
       <div class="sitem"><div class="sn" style="color:#1a8060">${cur}</div><div class="sl">當季穿</div></div>
       <div class="sitem"><div class="sn" style="color:#1a5aaa">${fut}</div><div class="sl">未來穿</div></div>
-      <div class="sitem"><div class="sn" style="color:#aa8800">${pend}</div><div class="sl">待整理</div></div>
+      <div class="sitem"><div class="sn" style="color:#aa8800">${pend}</div><div class="sl">未分類</div></div>
       <div class="sitem"><div class="sn" style="color:#7a1a9a">${worn}</div><div class="sl">穿不下</div></div>
     </div>
     ${catItems.length?`<div class="stats-cats">${catBadges}</div>`:''}`;
@@ -1461,7 +1499,7 @@ function handleBulkImport(input){
       const headers=rows[0].map(h=>String(h).trim());
       const data=rows.slice(1).filter(r=>r.some(v=>String(v).trim()!==''));
       pendingBulkData=data.map(row=>{
-        const obj={id:Date.now()+Math.random()+'',status:'待整理',updatedAt:new Date().toLocaleDateString('zh-TW')};
+        const obj={id:Date.now()+Math.random()+'',status:'未分類',updatedAt:new Date().toLocaleDateString('zh-TW')};
         headers.forEach((h,i)=>{
           const key=COL_MAP[h]||COL_MAP[h.replace(/[（）()\s]/g,'')];
           if(key&&row[i]!==undefined&&row[i]!=='')obj[key]=String(row[i]).trim();
@@ -1610,18 +1648,17 @@ function wardPush(){
 function wardApplyRemote(data, showNotif){
   var localTs = getLocalTs();
   var remoteTs = data.updatedAt || 0;
-  // 本機比雲端新 → 不套用遠端，靜默推本機上去補齊
+  // 本機比雲端新 → 不套用，把本機推上去
   if(localTs > remoteTs){
     wardSetSyncDot('on');
-    wardPush();
+    wardPush(); // 確保雲端跟本機同步
     return;
   }
-  // 雲端比本機新 → 套用
   if(data.clothes) clothes = data.clothes;
   if(data.zones)   zones   = data.zones;
-  setLocalTs(remoteTs); // 更新本機時間戳，防止下次誤判
   localStorage.setItem(KEY_C, JSON.stringify(clothes));
   localStorage.setItem(KEY_Z, JSON.stringify(zones));
+  // 不更新 KEY_TS，這樣下次比較還是以雲端時間為準
   render();
   wardSetSyncDot('on');
   if(showNotif) showToast('喵！家人剛剛更新了衣櫃資料，已同步囉 🐾','✨');
