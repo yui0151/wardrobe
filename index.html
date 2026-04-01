@@ -410,6 +410,17 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
   align-items:center;gap:2px;background:var(--bg);color:var(--sub);transition:all .2s;}
 .nbtn span:first-child{font-size:1.05rem;}
 .nbtn.active{background:linear-gradient(135deg,#fce4ec,#ffecd8);color:#8b2048;}
+
+  /* ══ 嘟嘟一家底部導覽 ══ */
+.dodu-nav{position:fixed;bottom:0;left:0;right:0;background:#fff8f4;border-top:1.5px solid #f4d8e4;display:none;z-index:9999;box-shadow:0 -2px 16px rgba(244,132,156,.15);padding-bottom:env(safe-area-inset-bottom,0px);}
+.dodu-nav.show{display:flex;}
+.dn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 2px 6px;gap:3px;cursor:pointer;color:#c07090;font-family:'Nunito',sans-serif;border:none;background:none;transition:color .15s;font-size:0;}
+.dn-item.active{color:#c02060;}
+.dn-item:active{opacity:.7;}
+.dn-icon{font-size:19px;line-height:1;}
+.dn-label{font-size:9px;font-weight:800;line-height:1;}
+/* .main 的 padding-bottom 加高，讓內容不被導覽列蓋住 */
+.main{padding-bottom:calc(86px + env(safe-area-inset-bottom,0px) + 12px) !important;}
 </style>
 </head>
 <body>
@@ -772,6 +783,16 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);displa
   <div class="success-txt" id="success-txt">喵！本喵幫你收好了！</div>
 </div>
 
+<!-- ══ 嘟嘟一家底部導覽 ══ -->
+<nav class="dodu-nav" id="doduNav">
+  <button class="dn-item" onclick="doduGo('home')"><span class="dn-icon">🏠</span><span class="dn-label">首頁</span></button>
+  <button class="dn-item" onclick="doduGo('sec')"><span class="dn-icon">🐧</span><span class="dn-label">家務</span></button>
+  <button class="dn-item" onclick="doduGo('inv')"><span class="dn-icon">🐰</span><span class="dn-label">庫存</span></button>
+  <button class="dn-item active"><span class="dn-icon">👗</span><span class="dn-label">衣櫃</span></button>
+  <button class="dn-item" onclick="doduGo('wiki')"><span class="dn-icon">📖</span><span class="dn-label">百科</span></button>
+  <button class="dn-item" onclick="doduGo('pocket')"><span class="dn-icon">🗺️</span><span class="dn-label">地圖</span></button>
+</nav>
+
 <!-- ══ MIAO TOAST ══ -->
 <div class="miao-toast" id="miao-toast">
   <div class="tcat" id="toast-cat">🐈</div>
@@ -922,6 +943,8 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 // ═══════════════════════════════════════
 function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');}
 function enterApp(){showView('view-home');render();localStorage.setItem('miao-v','1');}
+document.getElementById('doduNav').classList.add('show');
+localStorage.setItem('dash_last_room', v);
 function goHome(){showView('view-home');render();}
 function goZone(){showView('view-zone');renderZones();}
 function goAdd(){
@@ -1611,6 +1634,20 @@ var wardSessionToken = Math.random().toString(36).slice(2);
 var KEY_TS = 'xiaodu-ts-v4';
 function getLocalTs(){ return parseInt(localStorage.getItem(KEY_TS)||'0'); }
 function setLocalTs(ts){ localStorage.setItem(KEY_TS, String(ts)); }
+
+var DODU_URLS = {
+  home:'https://yui0151.github.io/home/',
+  sec:'https://yui0151.github.io/secretary/',
+  inv:'https://yui0151.github.io/inventory/',
+  pocket:'https://yamap610.github.io/pocket-list/',
+  wiki:'https://yamap610.github.io/mywiki/'
+};
+function doduGo(key){
+  var b = DODU_URLS[key];
+  if(!b) return;
+  var rc = localStorage.getItem('dash_last_room') || '';
+  window.location.href = b + (rc ? '?code=' + rc : '');
+}
 
 function wardLogin(){
   var v = document.getElementById('wardRoomInput').value.trim().toLowerCase().replace(/\s+/g,'');
